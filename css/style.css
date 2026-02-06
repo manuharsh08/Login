@@ -46,3 +46,10 @@ button{
   object-fit:cover;
   margin-bottom:10px;
 }
+.made-by a {
+  color: #a5b4fc;
+  text-decoration: none;
+}
+.made-by a:hover {
+  text-decoration: underline;
+}
