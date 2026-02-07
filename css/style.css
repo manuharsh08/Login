@@ -2,7 +2,6 @@
 body {
   margin: 0;
   min-height: 100vh;
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -10,12 +9,22 @@ body {
   background: #0b1630;
   font-family: "Segoe UI", sans-serif;
   color: white;
+  padding: 20px;
+}
 
-  padding: 20px; /* prevents edge touching on mobile */
+/* ===== Snow Canvas (always behind) ===== */
+#snow {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* ===== Glass Card ===== */
 .card {
+  position: relative;
+  z-index: 10;
+
   background: rgba(255, 255, 255, 0.08);
   padding: 40px;
   border-radius: 18px;
@@ -23,7 +32,6 @@ body {
 
   width: 320px;
   max-width: 100%;
-
   text-align: center;
 
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -70,30 +78,34 @@ button:hover {
   margin-bottom: 10px;
 }
 
-/* ===== Snow Canvas ===== */
-/* Snow stays behind EVERYTHING */
-#snow {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Dashboard card above snow */
-.card {
-  position: relative;
-  z-index: 10;
-}
-
-/* Profile icon must be highest */
+/* ===== Profile Menu ===== */
 .profile-menu {
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 1000;   /* VERY important */
+  z-index: 9999;
   cursor: pointer;
 }
 
+.profile-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: all 0.25s ease;
+}
+
+.profile-icon:hover {
+  transform: scale(1.08);
+  border-color: #a5b4fc;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
 
 /* ===== Dashboard ===== */
 .dashboard-card h1 {
@@ -107,102 +119,10 @@ button:hover {
 }
 
 .dashboard-card {
-  text-align: center;
   padding: 50px 60px;
 }
 
-/* ===== Footer ===== */
-.credits-bar {
-  position: fixed;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.75);
-
-  text-align: center;
-  white-space: nowrap;
-}
-
-/* ===== Mobile Fix ===== */
-@media (max-width: 420px) {
-  .dashboard-card {
-    padding: 40px 25px;
-  }
-
-  .dashboard-card h1 {
-    font-size: 26px;
-  }
-
-  .credits-bar {
-    font-size: 12px;
-    white-space: normal;
-  }
-}
-/* ===== Styled footer name ===== */
-.credits-bar .name {
-  font-weight: 600;
-  color: #a5b4fc;
-}
-
-/* ===== Profile menu (top‑left) ===== */
-.profile-menu {
-  position: fixed;
-  top: 18px;
-  right: 18px;   
-  cursor: pointer;
-  z-index: 50;   
-}
-
-.profile-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  object-fit: cover;
-
-  border: 2px solid rgba(255,255,255,0.35);
-  background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(10px);
-
-  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
-  transition: all 0.25s ease;
-}
-
-.profile-icon:hover {
-  transform: scale(1.08);
-  border-color: #a5b4fc;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.45);
-}
-
-/* Snow must stay fully behind */
-#snow {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Main card above snow */
-.card {
-  position: relative;
-  z-index: 10;
-}
-
-/* Profile icon must be highest clickable layer */
-.profile-menu {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;   /* VERY HIGH to guarantee click */
-}
-
-.profile-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  cursor: pointer;
-}
+/* ===== Switch Links ===== */
 .switch {
   margin-top: 12px;
   font-size: 14px;
@@ -218,6 +138,8 @@ button:hover {
 .switch a:hover {
   text-decoration: underline;
 }
+
+/* ===== Upload Button ===== */
 .upload-btn {
   display: block;
   padding: 10px;
@@ -240,11 +162,12 @@ button:hover {
   font-size: 12px;
   opacity: 0.7;
 }
+
 /* ===== Spinner ===== */
 .spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top: 2px solid white;
   border-radius: 50%;
   display: inline-block;
@@ -254,95 +177,103 @@ button:hover {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* ===== Error text ===== */
+/* ===== Login Error ===== */
 .login-error {
   color: #f87171;
   margin-top: 10px;
   font-size: 14px;
 }
-.made-by {
-  color: rgba(255, 255, 255, 0.8);
+
+/* ===== Footer ===== */
+.credits-bar {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+  white-space: nowrap;
 }
 
-.made-by a {
-  color: #ffffff;       
-  font-weight: 700;   
-  text-decoration: none;
-  transition: 0.2s ease;
-}
-
-.made-by a:hover {
-  text-decoration: underline; 
-  opacity: 0.9;
-}
-.made-by {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
-}
-
-/* Gradient glowing name */
-/* ===== Continuous neon glow text ===== */
+/* ===== Living Gradient Neon Author ===== */
 .author {
   font-weight: 700;
   text-decoration: none;
 
-  background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
+  background: linear-gradient(
+    120deg,
+    #60a5fa,
+    #a78bfa,
+    #f472b6,
+    #60a5fa
+  );
+  background-size: 300% 300%;
+
   background-clip: text;
   -webkit-background-clip: text;
 
   color: transparent;
   -webkit-text-fill-color: transparent;
 
-  /* Continuous glow animation */
-  animation: neonGlow 2.5s ease-in-out infinite alternate;
+  animation:
+    gradientFlow 6s ease infinite,
+    neonGlow 2.5s ease-in-out infinite alternate;
+
+  transition: transform 0.25s ease, filter 0.25s ease;
 }
 
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 
-/* ===== Smooth glowing pulse ===== */
 @keyframes neonGlow {
   0% {
     filter:
-      drop-shadow(0 0 2px rgba(167,139,250,0.4))
-      drop-shadow(0 0 6px rgba(167,139,250,0.4));
+      drop-shadow(0 0 3px rgba(167,139,250,0.4))
+      drop-shadow(0 0 8px rgba(167,139,250,0.4));
   }
-
   50% {
     filter:
-      drop-shadow(0 0 8px rgba(167,139,250,0.9))
-      drop-shadow(0 0 18px rgba(244,114,182,0.9));
+      drop-shadow(0 0 10px rgba(167,139,250,0.9))
+      drop-shadow(0 0 22px rgba(244,114,182,0.9));
   }
-
   100% {
     filter:
-      drop-shadow(0 0 4px rgba(96,165,250,0.7))
-      drop-shadow(0 0 12px rgba(167,139,250,0.8));
+      drop-shadow(0 0 6px rgba(96,165,250,0.7))
+      drop-shadow(0 0 14px rgba(167,139,250,0.8));
   }
 }
 
-/* Neon glow pulse */
-@keyframes neonPulse {
-  0% {
-    filter: drop-shadow(0 0 2px rgba(167, 139, 250, 0.4))
-            drop-shadow(0 0 6px rgba(167, 139, 250, 0.4));
-  }
-  50% {
-    filter: drop-shadow(0 0 6px rgba(167, 139, 250, 0.9))
-            drop-shadow(0 0 14px rgba(244, 114, 182, 0.8));
-  }
-  100% {
-    filter: drop-shadow(0 0 2px rgba(167, 139, 250, 0.4))
-            drop-shadow(0 0 6px rgba(167, 139, 250, 0.4));
-  }
-}
-
-/* Apply pulse on hover */
 .author:hover {
   text-decoration: underline;
   text-decoration-color: #a78bfa;
+  transform: scale(1.06);
 
-  animation: neonPulse 1.5s ease-in-out infinite;
+  filter:
+    drop-shadow(0 0 12px rgba(167,139,250,1))
+    drop-shadow(0 0 28px rgba(244,114,182,1));
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 420px) {
+  .dashboard-card {
+    padding: 40px 25px;
+  }
+
+  .dashboard-card h1 {
+    font-size: 26px;
+  }
+
+  .credits-bar {
+    font-size: 12px;
+    white-space: normal;
+  }
 }
