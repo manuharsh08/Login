@@ -11,6 +11,8 @@ loginBtn?.addEventListener("click", async () => {
       return;
     }
 
+    setLoading(true);
+
     const { error } = await supabase.auth.signInWithPassword({
       email: emailEl.value,
       password: passwordEl.value,
@@ -18,25 +20,39 @@ loginBtn?.addEventListener("click", async () => {
 
     if (error) throw error;
 
-    // ✅ Silent redirect (no alert)
+    // ✅ Silent redirect
     window.location.href = "dashboard.html";
 
   } catch (err) {
     showError(err.message);
     console.error("Login error:", err);
+  } finally {
+    setLoading(false);
   }
 });
 
-/* ===== Small inline error message instead of alert ===== */
+/* ===== Loading state ===== */
+function setLoading(isLoading) {
+  if (!loginBtn) return;
+
+  if (isLoading) {
+    loginBtn.disabled = true;
+    loginBtn.dataset.originalText = loginBtn.textContent;
+    loginBtn.innerHTML = `<span class="spinner"></span> Logging in...`;
+  } else {
+    loginBtn.disabled = false;
+    loginBtn.textContent = loginBtn.dataset.originalText || "Login";
+  }
+}
+
+/* ===== Inline error ===== */
 function showError(message) {
   let msg = document.getElementById("loginError");
 
   if (!msg) {
     msg = document.createElement("p");
     msg.id = "loginError";
-    msg.style.color = "#f87171";
-    msg.style.marginTop = "10px";
-    msg.style.fontSize = "14px";
+    msg.className = "login-error";
     loginBtn.after(msg);
   }
 
