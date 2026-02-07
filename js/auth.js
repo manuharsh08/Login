@@ -1,25 +1,44 @@
 import { supabase } from "./supabaseClient.js";
 
-const email = document.getElementById("email");
-const password = document.getElementById("password");
-const msg = document.getElementById("msg");
+const emailEl = document.getElementById("email");
+const passwordEl = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
 
-signupBtn.onclick = async () => {
-  const { error } = await supabase.auth.signUp({
-    email: email.value,
-    password: password.value,
-  });
+loginBtn?.addEventListener("click", async () => {
+  try {
+    if (!emailEl.value || !passwordEl.value) {
+      showError("Enter email and password");
+      return;
+    }
 
-  msg.innerText = error ? error.message : "Signup success. Now login.";
-};
+    const { error } = await supabase.auth.signInWithPassword({
+      email: emailEl.value,
+      password: passwordEl.value,
+    });
 
-loginBtn.onclick = async () => {
-  const { error } = await supabase.auth.signInWithPassword({
-    email: email.value,
-    password: password.value,
-  });
+    if (error) throw error;
 
-  if (error) return (msg.innerText = error.message);
+    // ✅ Silent redirect (no alert)
+    window.location.href = "dashboard.html";
 
-  location.href = "dashboard.html";
-};
+  } catch (err) {
+    showError(err.message);
+    console.error("Login error:", err);
+  }
+});
+
+/* ===== Small inline error message instead of alert ===== */
+function showError(message) {
+  let msg = document.getElementById("loginError");
+
+  if (!msg) {
+    msg = document.createElement("p");
+    msg.id = "loginError";
+    msg.style.color = "#f87171";
+    msg.style.marginTop = "10px";
+    msg.style.fontSize = "14px";
+    loginBtn.after(msg);
+  }
+
+  msg.textContent = message;
+}
