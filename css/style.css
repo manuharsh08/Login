@@ -203,3 +203,40 @@ button:hover {
   border-radius: 50%;
   cursor: pointer;
 }
+.switch {
+  margin-top: 12px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.switch a {
+  color: #a5b4fc;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.switch a:hover {
+  text-decoration: underline;
+}
+.upload-btn {
+  display: block;
+  padding: 10px;
+  margin-top: 8px;
+  border-radius: 10px;
+  background: #6366f1;
+  color: white;
+  cursor: pointer;
+  text-align: center;
+  font-size: 14px;
+}
+
+.upload-btn:hover {
+  background: #4f46e5;
+}
+
+.file-name {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.7;
+}

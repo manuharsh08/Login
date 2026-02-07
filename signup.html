@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Account</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="card dashboard-card">
+  <h2>Create Account</h2>
+
+  <input id="name" placeholder="Full Name" />
+  <input id="email" type="email" placeholder="Email" />
+  <input id="mobile" placeholder="Mobile Number" />
+  <input id="password" type="password" placeholder="Password" />
+  <input id="avatar" type="file" accept="image/*" hidden />
+
+<label for="avatar" class="upload-btn">
+  Upload Profile Pic
+</label>
+
+<span id="fileName" class="file-name"></span>
+
+
+  <button id="signupBtn">Sign Up</button>
+
+  <p class="switch">
+    Already have an account?
+    <a href="index.html">Login</a>
+  </p>
+</div>
+
+<script type="module" src="js/signup.js"></script>
+<script src="js/snow.js"></script>
+</body>
+</html>
