@@ -21,5 +21,5 @@ loginBtn.onclick = async () => {
 
   if (error) return (msg.innerText = error.message);
 
-  location.href = "profile.html";
+  location.href = "dashboard.html";
 };

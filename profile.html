@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Profile</title>
+  <title>Profile Settings</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-<div class="card">
-  <h2>User Profile</h2>
+<div class="card dashboard-card">
+  <h2>Profile Settings</h2>
 
-  <img id="avatar" class="avatar" />
+  <img id="avatarPreview" class="avatar" />
 
-  <input id="name" placeholder="Your name" />
-  <input id="photo" placeholder="Photo URL" />
+  <input id="nameInput" placeholder="Your name" />
+  <input id="fileInput" type="file" accept="image/*" />
 
-  <button id="saveProfile">Save Profile</button>
-  <button id="logoutBtn" class="secondary">Logout</button>
+  <button id="saveBtn">Save Changes</button>
+  <button id="backBtn" class="secondary">Back to Dashboard</button>
 </div>
 
-<script type="module" src="js/profile.js"></script>
+<script type="module" src="js/profileSettings.js"></script>
 </body>
 </html>
