@@ -263,3 +263,19 @@ button:hover {
   margin-top: 10px;
   font-size: 14px;
 }
+.made-by {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+}
+
+.made-by a {
+  color: #ffffff;       
+  font-weight: 700;   
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.made-by a:hover {
+  text-decoration: underline; 
+  opacity: 0.9;
+}
