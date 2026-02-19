@@ -26,44 +26,68 @@ logoutBtn.onclick = async () => {
   location.href = "index.html";
 };
 
-// ===== Fetch and show available tests =====
+// ===== Fetch and show available tests with attempt status =====
 const testsList = document.getElementById("testsList");
 
 async function loadTests() {
-  const { data: tests, error } = await supabase
+  const userEmail = data.user.email;
+
+  // 1️⃣ Get all tests
+  const { data: tests, error: testError } = await supabase
     .from("tests")
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Error loading tests:", error.message);
+  if (testError) {
+    console.error("Error loading tests:", testError.message);
     return;
   }
 
-  // Clear container
   testsList.innerHTML = "";
 
-  // Create simple list
-  tests.forEach(test => {
-    const div = document.createElement("div");
+  // 2️⃣ Loop through tests
+  for (const test of tests) {
+    // Check if this user already attempted this test
+    const { data: result } = await supabase
+      .from("results")
+      .select("*")
+      .eq("email", userEmail)
+      .eq("test_id", test.id)
+      .single();
 
-    div.style.margin = "10px 0";
+    const div = document.createElement("div");
     div.className = "test-card";
 
-div.innerHTML = `
-  <div class="test-info">
-    <h4>${test.title}</h4>
-    <p>${test.subject}</p>
-  </div>
+    // 3️⃣ If attempted → show score
+    if (result) {
+      div.innerHTML = `
+        <div class="test-info">
+          <h4>${test.title}</h4>
+          <p>${test.subject}</p>
+          <small>Score: ${result.score}/${result.total} (${result.percentage}%)</small>
+        </div>
 
-  <a class="start-btn" href="${test.form_url}" target="_blank">
-    Start Test
-  </a>
-`;
+        <span class="attempted-badge">Attempted ✓</span>
+      `;
+    }
+
+    // 4️⃣ If not attempted → show start button
+    else {
+      div.innerHTML = `
+        <div class="test-info">
+          <h4>${test.title}</h4>
+          <p>${test.subject}</p>
+        </div>
+
+        <a class="start-btn" href="${test.form_url}" target="_blank">
+          Start Test
+        </a>
+      `;
+    }
 
     testsList.appendChild(div);
-  });
+  }
 }
 
-// Load tests when dashboard opens
+// Load tests
 loadTests();
