@@ -25,3 +25,45 @@ logoutBtn.onclick = async () => {
   await supabase.auth.signOut();
   location.href = "index.html";
 };
+
+// ===== Fetch and show available tests =====
+const testsList = document.getElementById("testsList");
+
+async function loadTests() {
+  const { data: tests, error } = await supabase
+    .from("tests")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error loading tests:", error.message);
+    return;
+  }
+
+  // Clear container
+  testsList.innerHTML = "";
+
+  // Create simple list
+  tests.forEach(test => {
+    const div = document.createElement("div");
+
+    div.style.margin = "10px 0";
+    div.className = "test-card";
+
+div.innerHTML = `
+  <div class="test-info">
+    <h4>${test.title}</h4>
+    <p>${test.subject}</p>
+  </div>
+
+  <a class="start-btn" href="${test.form_url}" target="_blank">
+    Start Test
+  </a>
+`;
+
+    testsList.appendChild(div);
+  });
+}
+
+// Load tests when dashboard opens
+loadTests();
