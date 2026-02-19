@@ -1,8 +1,8 @@
 import { supabase } from "./supabaseClient.js";
 
-const avatar = document.getElementById("avatar");
-const nameInput = document.getElementById("name");
-const photoInput = document.getElementById("photo");
+const avatar = document.getElementById("avatarPreview");
+const nameInput = document.getElementById("nameInput");
+const photoInput = document.getElementById("fileInput");
 
 const { data } = await supabase.auth.getUser();
 if (!data.user) location.href = "index.html";

@@ -3,35 +3,33 @@ import { supabase } from "./supabaseClient.js";
 const welcomeText = document.getElementById("welcomeText");
 const logoutBtn = document.getElementById("logoutBtn");
 const profileIcon = document.getElementById("profileIcon");
+const testsList = document.getElementById("testsList");
+const resultsList = document.getElementById("resultsList");
 
 const DEFAULT_ICON =
   "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
+// ================= AUTH =================
 const { data } = await supabase.auth.getUser();
 
 if (!data.user) {
   location.href = "index.html";
-} else {
-  const name =
-    data.user.user_metadata?.name || data.user.email.split("@")[0];
-
-  welcomeText.innerText = `Welcome ${name}!`;
-
-  // ⭐ SHOW AVATAR
-  profileIcon.src = data.user.user_metadata?.photo || DEFAULT_ICON;
 }
+
+const userEmail = data.user.email;
+const name =
+  data.user.user_metadata?.name || userEmail.split("@")[0];
+
+welcomeText.innerText = `Welcome ${name}!`;
+profileIcon.src = data.user.user_metadata?.photo || DEFAULT_ICON;
 
 logoutBtn.onclick = async () => {
   await supabase.auth.signOut();
   location.href = "index.html";
 };
 
-// ===== Fetch and show available tests with attempt status =====
-const testsList = document.getElementById("testsList");
-
-async function loadTests() {
-  const userEmail = data.user.email;
-
+// ================= LOAD DASHBOARD DATA =================
+async function loadDashboard() {
   // 1️⃣ Get all tests
   const { data: tests, error: testError } = await supabase
     .from("tests")
@@ -43,36 +41,33 @@ async function loadTests() {
     return;
   }
 
+  // 2️⃣ Get user results
+  const { data: results, error: resultError } = await supabase
+    .from("results")
+    .select("*")
+    .eq("email", userEmail);
+
+  if (resultError) {
+    console.error("Error loading results:", resultError.message);
+    return;
+  }
+
   testsList.innerHTML = "";
+  resultsList.innerHTML = "";
 
-  // 2️⃣ Loop through tests
-  for (const test of tests) {
-    // Check if this user already attempted this test
-    const { data: result } = await supabase
-      .from("results")
-      .select("*")
-      .eq("email", userEmail)
-      .eq("test_id", test.id)
-      .single();
+  // Convert results into map for quick lookup
+  const resultsMap = {};
+  results.forEach(r => {
+    resultsMap[r.test_id] = r;
+  });
 
-    const div = document.createElement("div");
-    div.className = "test-card";
+  // ================= AVAILABLE TESTS =================
+  tests.forEach(test => {
+    // If user has NOT attempted this test
+    if (!resultsMap[test.id]) {
+      const div = document.createElement("div");
+      div.className = "test-card";
 
-    // 3️⃣ If attempted → show score
-    if (result) {
-      div.innerHTML = `
-        <div class="test-info">
-          <h4>${test.title}</h4>
-          <p>${test.subject}</p>
-          <small>Score: ${result.score}/${result.total} (${result.percentage}%)</small>
-        </div>
-
-        <span class="attempted-badge">Attempted ✓</span>
-      `;
-    }
-
-    // 4️⃣ If not attempted → show start button
-    else {
       div.innerHTML = `
         <div class="test-info">
           <h4>${test.title}</h4>
@@ -83,11 +78,45 @@ async function loadTests() {
           Start Test
         </a>
       `;
-    }
 
-    testsList.appendChild(div);
+      testsList.appendChild(div);
+    }
+  });
+
+  if (!testsList.children.length) {
+    testsList.innerHTML = `<p style="opacity:0.6;">No tests available.</p>`;
+  }
+
+  // ================= PREVIOUS RESULTS =================
+  if (!results.length) {
+    resultsList.innerHTML = `<p style="opacity:0.6;">No attempts yet.</p>`;
+  } else {
+    results
+      .sort((a, b) => new Date(b.attempted_at) - new Date(a.attempted_at))
+      .forEach(r => {
+        const testInfo = tests.find(t => t.id === r.test_id);
+
+        const div = document.createElement("div");
+        div.className = "result-card";
+
+        const date = new Date(r.attempted_at).toLocaleDateString();
+
+        div.innerHTML = `
+          <div>
+            <h4>${testInfo?.title || "Test"}</h4>
+            <p>${testInfo?.subject || ""}</p>
+            <small>${date}</small>
+          </div>
+
+          <div class="score-badge">
+            ${r.score}/${r.total} (${r.percentage}%)
+          </div>
+        `;
+
+        resultsList.appendChild(div);
+      });
   }
 }
 
-// Load tests
-loadTests();
+// Load everything
+loadDashboard();
