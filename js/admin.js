@@ -66,12 +66,36 @@ addTestBtn.onclick = async () => {
   loadTests();
 };
 
+/* ===== UPDATE TEST ===== */
+async function updateTest(id, title, subject, link) {
+  const { error } = await supabase
+    .from("tests")
+    .update({
+      title: title,
+      subject: subject,
+      form_url: link,
+    })
+    .eq("id", id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  loadTests();
+}
+
 /* ===== Load Tests ===== */
 async function loadTests() {
-  const { data: tests } = await supabase
+  const { data: tests, error } = await supabase
     .from("tests")
     .select("*")
     .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error.message);
+    return;
+  }
 
   adminTestsList.innerHTML = "";
 
@@ -84,7 +108,44 @@ async function loadTests() {
         <h4>${test.title}</h4>
         <p>${test.subject}</p>
       </div>
+
+      <div style="display:flex; gap:8px;">
+        <button class="edit-btn">Edit</button>
+        <button class="delete-btn">Delete</button>
+      </div>
     `;
+
+    /* ===== DELETE ===== */
+    const deleteBtn = div.querySelector(".delete-btn");
+
+    deleteBtn.onclick = async () => {
+      if (!confirm("Delete this test?")) return;
+
+      const { error } = await supabase
+        .from("tests")
+        .delete()
+        .eq("id", test.id);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      loadTests();
+    };
+
+    /* ===== EDIT ===== */
+    const editBtn = div.querySelector(".edit-btn");
+
+    editBtn.onclick = () => {
+      const newTitle = prompt("Edit title:", test.title);
+      const newSubject = prompt("Edit subject:", test.subject);
+      const newLink = prompt("Edit form link:", test.form_url);
+
+      if (!newTitle || !newSubject || !newLink) return;
+
+      updateTest(test.id, newTitle, newSubject, newLink);
+    };
 
     adminTestsList.appendChild(div);
   });
@@ -92,7 +153,7 @@ async function loadTests() {
 
 /* ===== Load Results ===== */
 async function loadResults() {
-  const { data: results } = await supabase
+  const { data: results, error } = await supabase
     .from("results")
     .select(`
       email,
@@ -102,6 +163,17 @@ async function loadResults() {
       tests (title)
     `)
     .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Results error:", error.message);
+    adminResultsList.innerHTML = `<p>Error loading results</p>`;
+    return;
+  }
+
+  if (!results || results.length === 0) {
+    adminResultsList.innerHTML = `<p>No results yet</p>`;
+    return;
+  }
 
   adminResultsList.innerHTML = "";
 
@@ -127,5 +199,3 @@ async function loadResults() {
 /* ===== Init ===== */
 loadTests();
 loadResults();
-console.log("Logged in user:", userEmail);
-console.log("Role data:", roleData);

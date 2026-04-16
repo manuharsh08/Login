@@ -20,17 +20,33 @@ loginBtn?.addEventListener("click", async () => {
 
     if (error) throw error;
 
-    // ✅ Silent redirect
-    // ===== Smooth Redirect Animation =====
-const loader = document.getElementById("loader");
+    /* ===== Get logged-in user (safer than emailEl) ===== */
+    const { data: userData } = await supabase.auth.getUser();
+    const userEmail = userData.user.email;
 
-// show fullscreen loader
-loader?.classList.remove("hidden");
+    /* ===== Get role ===== */
+    const { data: roleData, error: roleError } = await supabase
+      .from("users")
+      .select("role")
+      .eq("email", userEmail)
+      .single();
 
-// small delay for smooth UX
-setTimeout(() => {
-  window.location.href = "dashboard.html";
-}, 1500);
+    if (roleError) {
+      console.error("Role fetch error:", roleError.message);
+    }
+
+    /* ===== Show loader ===== */
+    const loader = document.getElementById("loader");
+    loader?.classList.remove("hidden");
+
+    /* ===== Redirect based on role ===== */
+    setTimeout(() => {
+      if (roleData?.role === "admin") {
+        window.location.href = "admin.html";
+      } else {
+        window.location.href = "dashboard.html";
+      }
+    }, 1500);
 
   } catch (err) {
     showError(err.message);
