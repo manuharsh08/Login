@@ -18,10 +18,16 @@ avatarEl?.addEventListener("change", () => {
 async function uploadAvatar(file, userId) {
   const path = `${userId}/${Date.now()}_${file.name}`;
 
-  const { error } = await supabase.storage.from("avatars").upload(path, file);
+  const { error } = await supabase.storage
+    .from("avatars")
+    .upload(path, file);
+
   if (error) throw error;
 
-  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  const { data } = supabase.storage
+    .from("avatars")
+    .getPublicUrl(path);
+
   return data.publicUrl;
 }
 
@@ -33,6 +39,7 @@ signupBtn?.addEventListener("click", async () => {
       return;
     }
 
+    /* ===== Create Auth User ===== */
     const { data, error } = await supabase.auth.signUp({
       email: emailEl.value,
       password: passwordEl.value,
@@ -46,7 +53,23 @@ signupBtn?.addEventListener("click", async () => {
 
     if (error) throw error;
 
-    /* optional avatar upload */
+    /* ===== Insert into users table ===== */
+    if (data.user) {
+      const { error: userInsertError } = await supabase
+        .from("users")
+        .insert([
+          {
+            email: data.user.email,
+            role: "student",
+          },
+        ]);
+
+      if (userInsertError) {
+        console.error("User table insert error:", userInsertError.message);
+      }
+    }
+
+    /* ===== Upload avatar (optional) ===== */
     if (avatarEl.files[0] && data.user) {
       const url = await uploadAvatar(avatarEl.files[0], data.user.id);
 
@@ -55,11 +78,14 @@ signupBtn?.addEventListener("click", async () => {
       });
     }
 
-    alert("Account created successfully 🎉");
-    window.location.href = "dashboard.html";
+    /* ===== Success ===== */
+    alert("Account created successfully 🎉 Please login.");
+
+    /* ===== Redirect to login ===== */
+    window.location.href = "index.html";
 
   } catch (err) {
     alert(err.message);
-    console.error(err);
+    console.error("Signup error:", err);
   }
 });

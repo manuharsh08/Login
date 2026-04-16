@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<canvas id="snow"></canvas>
+
+<div class="card dashboard-card">
+
+  <h1>Admin Dashboard ⚙️</h1>
+  <p class="sub">Manage tests and view student performance</p>
+
+  <!-- ===== Create Test ===== -->
+  <h3>Create Test</h3>
+
+  <input id="testTitle" placeholder="Test Title" />
+  <input id="testSubject" placeholder="Subject" />
+  <input id="testLink" placeholder="Google Form Link" />
+
+  <button id="addTestBtn">Add Test</button>
+
+  <!-- ===== Tests List ===== -->
+  <h3 style="margin-top:20px;">All Tests</h3>
+  <div id="adminTestsList"></div>
+
+  <!-- ===== Results ===== -->
+  <h3 style="margin-top:20px;">Student Results</h3>
+  <div id="adminResultsList"></div>
+
+  <button id="logoutBtn" class="secondary">Logout</button>
+
+</div>
+
+<footer class="credits-bar">
+  © 2026 Made with ❤️ by <span class="author">Harshvardhan Dhankhar</span>
+</footer>
+
+<script type="module" src="js/admin.js"></script>
+<script src="js/snow.js"></script>
+
+</body>
+</html>
