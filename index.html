@@ -8,26 +8,47 @@
 </head>
 <body>
 <canvas id="snow"></canvas>
+<div id="loader" class="loader hidden">
+  <div class="spinner-big"></div>
+  <p>Logging you in...</p>
+</div>
 <div class="card">
+
+  <div class="logo">🎓 Exam Portal</div>
+
   <h2>Login</h2>
 
-  <input id="email" type="email" placeholder="Email" />
-  <input id="password" type="password" placeholder="Password" />
+  <div class="input-group">
+    <span>📧</span>
+    <input id="email" type="email" placeholder="Email" />
+  </div>
+
+  <div class="input-group">
+    <span>🔒</span>
+    <input id="password" type="password" placeholder="Password" />
+  </div>
+
+  <!-- <p class="forgot">
+    <a href="#">Forgot password?</a>
+  </p> -->
 
   <button id="loginBtn">Login</button>
 
-<p class="switch">
-  Don’t have an account?
-  <a href="signup.html">Create an account</a>
-</p>
+  <p class="secure">🔒 Secure student login</p>
+
+  <p class="switch">
+    Don’t have an account?
+    <a href="signup.html">Create an account</a>
+  </p>
 
   <p id="msg"></p>
-<p class="made-by">
-  Made with ❤️ by
-  <a href="https://github.com/manuharsh08" target="_blank" class="author">
-    Harshvardhan Dhankhar
-  </a>
-</p>
+
+  <p class="made-by">
+    Made with ❤️ by
+    <a href="https://github.com/manuharsh08" target="_blank" class="author">
+      Harshvardhan Dhankhar
+    </a>
+  </p>
 
 </div>
 

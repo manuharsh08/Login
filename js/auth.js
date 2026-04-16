@@ -21,7 +21,16 @@ loginBtn?.addEventListener("click", async () => {
     if (error) throw error;
 
     // ✅ Silent redirect
-    window.location.href = "dashboard.html";
+    // ===== Smooth Redirect Animation =====
+const loader = document.getElementById("loader");
+
+// show fullscreen loader
+loader?.classList.remove("hidden");
+
+// small delay for smooth UX
+setTimeout(() => {
+  window.location.href = "dashboard.html";
+}, 1500);
 
   } catch (err) {
     showError(err.message);
