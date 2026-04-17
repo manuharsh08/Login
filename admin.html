@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Panel</title>
-  <link rel="stylesheet" href="css/style.css"/>
+
+  <!-- IMPORTANT: check path -->
+  <link rel="stylesheet" href="./css/style.css"/>
 </head>
 <body>
 
@@ -15,33 +17,60 @@
   <h1>Admin Dashboard ⚙️</h1>
   <p class="sub">Manage tests and view student performance</p>
 
+  <!-- ===== Stats ===== -->
+  <div class="stats">
+    <div class="stat-box">
+      <h2 id="totalTests">0</h2>
+      <p>Total Tests</p>
+    </div>
+
+    <div class="stat-box">
+      <h2 id="totalAttempts">0</h2>
+      <p>Attempts</p>
+    </div>
+
+    <div class="stat-box">
+      <h2 id="avgScore">0%</h2>
+      <p>Avg Score</p>
+    </div>
+  </div>
+
   <!-- ===== Create Test ===== -->
-  <h3>Create Test</h3>
+  <div class="section">
+    <h3>Create Test</h3>
 
-  <input id="testTitle" placeholder="Test Title" />
-  <input id="testSubject" placeholder="Subject" />
-  <input id="testLink" placeholder="Google Form Link" />
+    <input id="testTitle" type="text" placeholder="Test Title" />
+    <input id="testSubject" type="text" placeholder="Subject" />
+    <input id="testLink" type="text" placeholder="Google Form Link" />
 
-  <button id="addTestBtn">Add Test</button>
+    <button id="addTestBtn">Add Test</button>
+  </div>
 
-  <!-- ===== Tests List ===== -->
-  <h3 style="margin-top:20px;">All Tests</h3>
-  <div id="adminTestsList"></div>
+  <!-- ===== Tests ===== -->
+  <div class="section">
+    <h3>All Tests</h3>
+    <div id="adminTestsList"></div>
+  </div>
 
   <!-- ===== Results ===== -->
-  <h3 style="margin-top:20px;">Student Results</h3>
-  <div id="adminResultsList"></div>
+  <div class="section">
+    <h3>Student Results</h3>
+    <div id="adminResultsList"></div>
+  </div>
 
+  <!-- ===== Logout ===== -->
   <button id="logoutBtn" class="secondary">Logout</button>
 
 </div>
 
 <footer class="credits-bar">
-  © 2026 Made with ❤️ by <span class="author">Harshvardhan Dhankhar</span>
+  © 2026 Made with ❤️ by 
+  <span class="author">Harshvardhan Dhankhar</span>
 </footer>
 
-<script type="module" src="js/admin.js"></script>
-<script src="js/snow.js"></script>
+<!-- IMPORTANT: correct paths -->
+<script type="module" src="./js/admin.js"></script>
+<script src="./js/snow.js"></script>
 
 </body>
 </html>

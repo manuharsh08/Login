@@ -196,6 +196,32 @@ async function loadResults() {
   });
 }
 
+async function loadStats() {
+  const { count: testCount } = await supabase
+    .from("tests")
+    .select("*", { count: "exact", head: true });
+
+  const { count: attemptCount } = await supabase
+    .from("results")
+    .select("*", { count: "exact", head: true });
+
+  const { data: scores } = await supabase
+    .from("results")
+    .select("percentage");
+
+  let avg = 0;
+  if (scores && scores.length) {
+    avg =
+      scores.reduce((sum, s) => sum + s.percentage, 0) /
+      scores.length;
+  }
+
+  document.getElementById("totalTests").innerText = testCount || 0;
+  document.getElementById("totalAttempts").innerText = attemptCount || 0;
+  document.getElementById("avgScore").innerText = Math.round(avg) + "%";
+}
+
 /* ===== Init ===== */
 loadTests();
 loadResults();
+loadStats();
