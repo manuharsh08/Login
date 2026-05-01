@@ -8,20 +8,38 @@
   <link rel="icon" href="favicon.ico" />
 </head>
 <body>
+<canvas id="snow"></canvas>
 
-<div class="card dashboard-card">
-  <h2>Profile Settings</h2>
+<main class="card dashboard-card">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Account</p>
+      <h2>Profile Settings</h2>
+      <p class="sub">Keep your learning profile current.</p>
+    </div>
+  </div>
 
-  <img id="avatarPreview" class="avatar" />
+  <img id="avatarPreview" class="avatar" alt="Profile picture preview" />
 
-  <input id="nameInput" placeholder="Your name" />
-  <input id="fileInput" type="file" accept="image/*" />
+  <div class="form-stack">
+    <label class="field" for="nameInput">
+      <span>Name</span>
+      <input id="nameInput" placeholder="Your name" autocomplete="name" />
+    </label>
 
-  <button id="saveBtn">Save Changes</button>
-  <button id="backBtn" class="secondary">Back to Dashboard</button>
-</div>
+    <label class="field" for="fileInput">
+      <span>Profile Picture</span>
+      <input id="fileInput" type="file" accept="image/*" />
+    </label>
+  </div>
+
+  <div class="actions">
+    <button id="saveBtn" type="button">Save Changes</button>
+    <button id="backBtn" type="button" class="secondary">Back to Dashboard</button>
+  </div>
+</main>
 
 <script type="module" src="js/profileSettings.js"></script>
-<script src="js/snow.js"></script>
+<script type="module" src="js/snow.js"></script>
 </body>
 </html>

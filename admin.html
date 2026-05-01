@@ -8,15 +8,17 @@
   <link rel="icon" href="favicon.ico" />
 </head>
 <body>
-
 <canvas id="snow"></canvas>
 
-<div class="card dashboard-card">
+<main class="card dashboard-card">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Admin</p>
+      <h1>Admin Dashboard</h1>
+      <p class="sub">Manage tests and monitor student performance.</p>
+    </div>
+  </div>
 
-  <h1>Admin Dashboard ⚙️</h1>
-  <p class="sub">Manage tests and view student performance</p>
-
-  <!-- ===== Stats ===== -->
   <div class="stats">
     <div class="stat-box">
       <h2 id="totalTests">0</h2>
@@ -34,42 +36,51 @@
     </div>
   </div>
 
-  <!-- ===== Create Test ===== -->
   <div class="section">
     <h3>Create Test</h3>
 
-    <input id="testTitle" type="text" placeholder="Test Title" />
-    <input id="testSubject" type="text" placeholder="Subject" />
-    <input id="testLink" type="text" placeholder="Google Form Link" />
+    <div class="form-stack">
+      <label class="field" for="testTitle">
+        <span>Test Title</span>
+        <input id="testTitle" type="text" placeholder="Unit 1 Assessment" />
+      </label>
+      <label class="field" for="testSubject">
+        <span>Subject</span>
+        <input id="testSubject" type="text" placeholder="Mathematics" />
+      </label>
+      <label class="field" for="testLink">
+        <span>Google Form Link</span>
+        <input id="testLink" type="url" placeholder="https://forms.gle/..." />
+      </label>
+    </div>
 
-    <button id="addTestBtn">Add Test</button>
+    <button id="addTestBtn" type="button">Add Test</button>
   </div>
 
-  <!-- ===== Tests ===== -->
   <div class="section">
-    <h3>All Tests</h3>
+    <div class="section-title">
+      <h3>All Tests</h3>
+      <span id="adminTestsCount">0 tests</span>
+    </div>
     <div id="adminTestsList"></div>
   </div>
 
-  <!-- ===== Results ===== -->
   <div class="section">
-    <h3>Student Results</h3>
+    <div class="section-title">
+      <h3>Student Results</h3>
+      <span id="adminResultsCount">0 results</span>
+    </div>
     <div id="adminResultsList"></div>
   </div>
 
-  <!-- ===== Logout ===== -->
-  <button id="logoutBtn" class="secondary">Logout</button>
-
-</div>
+  <button id="logoutBtn" type="button" class="secondary">Logout</button>
+</main>
 
 <footer class="credits-bar">
-  © 2026 Made with ❤️ by 
-  <span class="author">Harshvardhan Dhankhar</span>
+  2026 Made by <span class="author">Harshvardhan Dhankhar</span>
 </footer>
 
-<!-- IMPORTANT: correct paths -->
 <script type="module" src="./js/admin.js"></script>
-<script src="./js/snow.js"></script>
-
+<script type="module" src="./js/snow.js"></script>
 </body>
 </html>

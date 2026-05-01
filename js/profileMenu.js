@@ -1,9 +1,6 @@
-import { supabase } from "./supabaseClient.js";
+const profileMenu = document.getElementById("profileMenu");
 
-const profileIcon = document.getElementById("profileIcon");
-
-console.log("profile icon element:", profileIcon);
-
-profileIcon.addEventListener("click", () => {
+profileMenu?.addEventListener("click", event => {
+  event.preventDefault();
   location.href = "profile.html";
 });

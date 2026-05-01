@@ -8,33 +8,42 @@
   <link rel="icon" href="favicon.ico" />
 </head>
 <body>
+<canvas id="snow"></canvas>
 
-<!-- Profile button (top‑left) -->
-<div class="profile-menu" id="profileMenu">
-  <img id="profileIcon" class="profile-icon" />
-</div>
+<a class="profile-menu" id="profileMenu" href="profile.html" aria-label="Open profile settings">
+  <img id="profileIcon" class="profile-icon" alt="" />
+</a>
 
-<!-- Center welcome card -->
-<div class="card dashboard-card">
-  <h1 id="welcomeText">Welcome!</h1>
-  <p class="sub">Glad to see you here ✨</p>
+<main class="card dashboard-card">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Student Dashboard</p>
+      <h1 id="welcomeText">Welcome!</h1>
+      <p class="sub">Track assigned tests, start new attempts, and review your scores.</p>
+    </div>
+  </div>
 
-  <h3>Available Tests</h3>
+  <div class="section-title">
+    <h3>Available Tests</h3>
+    <span id="testsCount">0 pending</span>
+  </div>
   <div id="testsList"></div>
 
-  <h3 style="margin-top:20px;">Previous Results</h3>
+  <div class="section-title section">
+    <h3>Previous Results</h3>
+    <span id="resultsCount">0 attempts</span>
+  </div>
   <div id="resultsList"></div>
 
-  <button id="logoutBtn" class="secondary">Logout</button>
-</div>
+  <button id="logoutBtn" type="button" class="secondary">Logout</button>
+</main>
 
-<!-- Footer -->
 <footer class="credits-bar">
-  © 2026 Made with ❤️ by <span class="name">Harshvardhan Dhankhar</span>
+  2026 Made by <span class="name">Harshvardhan Dhankhar</span>
 </footer>
 
 <script type="module" src="js/dashboard.js"></script>
 <script type="module" src="js/profileMenu.js"></script>
-<script src="js/snow.js"></script>
+<script type="module" src="js/snow.js"></script>
 </body>
 </html>

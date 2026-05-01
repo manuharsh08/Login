@@ -8,32 +8,48 @@
   <link rel="icon" href="favicon.ico" />
 </head>
 <body>
+<canvas id="snow"></canvas>
 
-<div class="card dashboard-card">
+<main class="card auth-card">
+  <div class="logo">Exam Portal</div>
   <h2>Create Account</h2>
+  <p class="sub">Set up your student profile in a minute.</p>
 
-  <input id="name" placeholder="Full Name" />
-  <input id="email" type="email" placeholder="Email" />
-  <input id="mobile" placeholder="Mobile Number" />
-  <input id="password" type="password" placeholder="Password" />
-  <input id="avatar" type="file" accept="image/*" hidden />
+  <div class="form-stack">
+    <label class="field" for="name">
+      <span>Full Name</span>
+      <input id="name" placeholder="Your name" autocomplete="name" />
+    </label>
 
-<label for="avatar" class="upload-btn">
-  Upload Profile Pic
-</label>
+    <label class="field" for="email">
+      <span>Email</span>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+    </label>
 
-<span id="fileName" class="file-name"></span>
+    <label class="field" for="mobile">
+      <span>Mobile Number</span>
+      <input id="mobile" type="tel" placeholder="Optional" autocomplete="tel" />
+    </label>
 
+    <label class="field" for="password">
+      <span>Password</span>
+      <input id="password" type="password" placeholder="Create a password" autocomplete="new-password" />
+    </label>
 
-  <button id="signupBtn">Sign Up</button>
+    <input id="avatar" type="file" accept="image/*" hidden />
+    <label for="avatar" class="upload-btn">Upload Profile Picture</label>
+    <span id="fileName" class="file-name"></span>
+  </div>
+
+  <button id="signupBtn" type="button">Sign Up</button>
 
   <p class="switch">
     Already have an account?
     <a href="index.html">Login</a>
   </p>
-</div>
+</main>
 
 <script type="module" src="js/signup.js"></script>
-<script src="js/snow.js"></script>
+<script type="module" src="js/snow.js"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>createProfile</title>
+  <title>Exam Portal Login</title>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="icon" href="favicon.ico" />
 </head>
@@ -13,45 +13,48 @@
   <div class="spinner-big"></div>
   <p>Logging you in...</p>
 </div>
-<div class="card">
 
-  <div class="logo">🎓 Exam Portal</div>
+<main class="card auth-card">
+  <div class="logo">Exam Portal</div>
+  <h2>Welcome back</h2>
+  <p class="sub">Sign in to continue your learning and assessments.</p>
 
-  <h2>Login</h2>
+  <div class="form-stack">
+    <label class="field" for="email">
+      <span>Email</span>
+      <div class="input-group">
+        <span>@</span>
+        <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+      </div>
+    </label>
 
-  <div class="input-group">
-    <span>📧</span>
-    <input id="email" type="email" placeholder="Email" />
+    <label class="field" for="password">
+      <span>Password</span>
+      <div class="input-group">
+        <span>*</span>
+        <input id="password" type="password" placeholder="Enter password" autocomplete="current-password" />
+      </div>
+    </label>
   </div>
 
-  <div class="input-group">
-    <span>🔒</span>
-    <input id="password" type="password" placeholder="Password" />
-  </div>
+  <button id="loginBtn" type="button">Login</button>
 
-  <!-- <p class="forgot">
-    <a href="#">Forgot password?</a>
-  </p> -->
-
-  <button id="loginBtn">Login</button>
-
-  <p class="secure">🔒 Secure student login</p>
+  <p class="secure">Secure student login</p>
 
   <p class="switch">
-    Don’t have an account?
+    Don't have an account?
     <a href="signup.html">Create an account</a>
   </p>
 
   <p id="msg"></p>
 
   <p class="made-by">
-    Made with ❤️ by
-    <a href="https://github.com/manuharsh08" target="_blank" class="author">
+    Made by
+    <a href="https://github.com/manuharsh08" target="_blank" rel="noreferrer" class="author">
       Harshvardhan Dhankhar
     </a>
   </p>
-
-</div>
+</main>
 
 <script type="module" src="js/auth.js"></script>
 <script type="module" src="js/snow.js"></script>

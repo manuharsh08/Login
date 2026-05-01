@@ -3,28 +3,37 @@ import { supabase } from "./supabaseClient.js";
 const emailEl = document.getElementById("email");
 const passwordEl = document.getElementById("password");
 const loginBtn = document.getElementById("loginBtn");
+const loader = document.getElementById("loader");
 
-loginBtn?.addEventListener("click", async () => {
+loginBtn?.addEventListener("click", login);
+
+[emailEl, passwordEl].forEach(input => {
+  input?.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      login();
+    }
+  });
+});
+
+async function login() {
   try {
-    if (!emailEl.value || !passwordEl.value) {
-      showError("Enter email and password");
+    if (!emailEl.value.trim() || !passwordEl.value) {
+      showError("Enter email and password.");
       return;
     }
 
     setLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({
-      email: emailEl.value,
+      email: emailEl.value.trim(),
       password: passwordEl.value,
     });
 
     if (error) throw error;
 
-    /* ===== Get logged-in user (safer than emailEl) ===== */
     const { data: userData } = await supabase.auth.getUser();
     const userEmail = userData.user.email;
 
-    /* ===== Get role ===== */
     const { data: roleData, error: roleError } = await supabase
       .from("users")
       .select("role")
@@ -35,28 +44,18 @@ loginBtn?.addEventListener("click", async () => {
       console.error("Role fetch error:", roleError.message);
     }
 
-    /* ===== Show loader ===== */
-    const loader = document.getElementById("loader");
     loader?.classList.remove("hidden");
 
-    /* ===== Redirect based on role ===== */
     setTimeout(() => {
-      if (roleData?.role === "admin") {
-        window.location.href = "admin.html";
-      } else {
-        window.location.href = "dashboard.html";
-      }
-    }, 1500);
-
+      window.location.href = roleData?.role === "admin" ? "admin.html" : "dashboard.html";
+    }, 700);
   } catch (err) {
     showError(err.message);
     console.error("Login error:", err);
-  } finally {
     setLoading(false);
   }
-});
+}
 
-/* ===== Loading state ===== */
 function setLoading(isLoading) {
   if (!loginBtn) return;
 
@@ -70,7 +69,6 @@ function setLoading(isLoading) {
   }
 }
 
-/* ===== Inline error ===== */
 function showError(message) {
   let msg = document.getElementById("loginError");
 

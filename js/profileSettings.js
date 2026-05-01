@@ -8,37 +8,42 @@ const backBtn = document.getElementById("backBtn");
 
 const DEFAULT_ICON = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
-// Get current user
 const { data } = await supabase.auth.getUser();
 
 if (!data.user) {
   location.href = "index.html";
 }
 
-// Load existing profile
 avatarPreview.src = data.user.user_metadata?.photo || DEFAULT_ICON;
 nameInput.value = data.user.user_metadata?.name || "";
 
-// Upload image helper
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files[0];
+  if (file) {
+    avatarPreview.src = URL.createObjectURL(file);
+  }
+});
+
 async function uploadAvatar(file, userId) {
   const filePath = `${userId}/${Date.now()}_${file.name}`;
 
-  const { error } = await supabase.storage
-    .from("avatars")
-    .upload(filePath, file);
-
+  const { error } = await supabase.storage.from("avatars").upload(filePath, file);
   if (error) throw error;
 
-  const { data: urlData } = supabase.storage
-    .from("avatars")
-    .getPublicUrl(filePath);
-
+  const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
   return urlData.publicUrl;
 }
 
-// Save changes
 saveBtn.onclick = async () => {
   try {
+    if (!nameInput.value.trim()) {
+      alert("Please enter your name.");
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving...";
+
     let photoUrl = data.user.user_metadata?.photo || null;
 
     if (fileInput.files[0]) {
@@ -47,17 +52,20 @@ saveBtn.onclick = async () => {
 
     const { error } = await supabase.auth.updateUser({
       data: {
-        name: nameInput.value,
+        name: nameInput.value.trim(),
         photo: photoUrl,
       },
     });
 
     if (error) throw error;
 
-    alert("Profile updated successfully 🎉");
+    alert("Profile updated successfully.");
     location.href = "dashboard.html";
   } catch (err) {
     alert(err.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save Changes";
   }
 };
 

@@ -1,74 +1,70 @@
-const canvas = document.createElement("canvas");
-canvas.id = "snow";
-document.body.appendChild(canvas);
+const canvas = document.getElementById("snow") || document.createElement("canvas");
+
+if (!canvas.id) {
+  canvas.id = "snow";
+}
+
+if (!canvas.isConnected) {
+  document.body.prepend(canvas);
+}
 
 const ctx = canvas.getContext("2d");
-
-let width, height;
+let width;
+let height;
 let flakes = [];
 
 function resize() {
   width = canvas.width = window.innerWidth;
   height = canvas.height = window.innerHeight;
 }
-window.addEventListener("resize", resize);
-resize();
 
-// create flakes
 function createFlakes() {
-  flakes = [];
-  for (let i = 0; i < 140; i++) {
-    flakes.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      r: Math.random() * 3 + 1,          // size
-      speed: Math.random() * 0.7 + 0.3,  // slower fall
-      drift: Math.random() * 0.5 - 0.25, // gentle sideways drift
-    });
-  }
+  flakes = Array.from({ length: 110 }, () => ({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    r: Math.random() * 2.4 + 0.8,
+    speed: Math.random() * 0.55 + 0.25,
+    drift: Math.random() * 0.45 - 0.225,
+  }));
 }
-createFlakes();
+
+function moveFlakes() {
+  flakes.forEach(flake => {
+    flake.y += flake.speed;
+    flake.x += flake.drift;
+    flake.drift += (Math.random() - 0.5) * 0.015;
+    flake.drift = Math.max(-0.45, Math.min(0.45, flake.drift));
+
+    if (flake.y > height) {
+      flake.y = -5;
+      flake.x = Math.random() * width;
+    }
+
+    if (flake.x > width) flake.x = 0;
+    if (flake.x < 0) flake.x = width;
+  });
+}
 
 function draw() {
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.72)";
   ctx.beginPath();
 
-  for (let f of flakes) {
-    ctx.moveTo(f.x, f.y);
-    ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-  }
+  flakes.forEach(flake => {
+    ctx.moveTo(flake.x, flake.y);
+    ctx.arc(flake.x, flake.y, flake.r, 0, Math.PI * 2);
+  });
 
   ctx.fill();
-  move();
+  moveFlakes();
+  requestAnimationFrame(draw);
 }
 
-function move() {
-  for (let f of flakes) {
-    // slow downward fall
-    f.y += f.speed;
+window.addEventListener("resize", () => {
+  resize();
+  createFlakes();
+});
 
-    // gentle natural drift
-    f.x += f.drift;
-
-    // slight random air movement
-    f.drift += (Math.random() - 0.5) * 0.02;
-    f.drift = Math.max(-0.5, Math.min(0.5, f.drift));
-
-    // reset when off screen
-    if (f.y > height) {
-      f.y = -5;
-      f.x = Math.random() * width;
-    }
-
-    if (f.x > width) f.x = 0;
-    if (f.x < 0) f.x = width;
-  }
-}
-
-function animate() {
-  draw();
-  requestAnimationFrame(animate);
-}
-
-animate();
+resize();
+createFlakes();
+draw();
