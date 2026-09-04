@@ -30,7 +30,12 @@ body {
     radial-gradient(circle at 85% 0%, rgba(251, 191, 36, 0.12), transparent 26%),
     linear-gradient(145deg, #07111f 0%, #10172a 52%, #151827 100%);
   color: var(--text);
-  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   line-height: 1.5;
 }
 
@@ -100,14 +105,23 @@ h3 {
 }
 
 h1 {
-  font-size: clamp(30px, 5vw, 46px);
-}
-
-h2 {
   font-size: 30px;
 }
 
+.page-header h1 {
+  font-size: clamp(28px, 4vw, 42px);
+}
+
+h2 {
+  font-size: 20px;
+}
+
 h3 {
+  font-size: 18px;
+}
+
+.section > h2,
+.section-title h2 {
   font-size: 18px;
 }
 
@@ -158,7 +172,10 @@ input {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text);
   font: inherit;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 input::placeholder {
@@ -219,7 +236,10 @@ button,
   font-size: 14px;
   font-weight: 800;
   text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 button {
@@ -309,7 +329,9 @@ button:disabled {
   object-fit: cover;
   background: rgba(22, 33, 58, 0.94);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .profile-icon:hover {
@@ -352,7 +374,10 @@ button:disabled {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.065);
-  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
 .test-card:hover,
@@ -404,10 +429,12 @@ button:disabled {
   background: rgba(255, 255, 255, 0.065);
 }
 
-.stat-box h2 {
+.stat-value {
   margin: 0;
   color: var(--brand);
   font-size: 30px;
+  font-weight: 800;
+  line-height: 1.1;
 }
 
 .stat-box p {
@@ -510,6 +537,68 @@ button:disabled {
   font-weight: 800;
 }
 
+.notice-error {
+  background: rgba(251, 113, 133, 0.12);
+  color: #fecdd3;
+}
+
+.toast-region {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 9999;
+  display: grid;
+  gap: 10px;
+  width: min(340px, calc(100vw - 40px));
+}
+
+.toast {
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: rgba(18, 27, 49, 0.96);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  backdrop-filter: blur(12px);
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.toast-success {
+  border-color: rgba(94, 234, 212, 0.42);
+  color: #99f6e4;
+}
+
+.toast-error {
+  border-color: rgba(251, 113, 133, 0.42);
+  color: #fecdd3;
+}
+
+.toast-out {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.test-card-editing {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  border-color: rgba(251, 191, 36, 0.32);
+  background: rgba(251, 191, 36, 0.06);
+}
+
+.test-card-editing .form-stack {
+  margin-top: 0;
+}
+
+.test-card-editing .admin-actions button {
+  width: auto;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -560,5 +649,39 @@ button:disabled {
   .credits-bar {
     width: calc(100% + 36px);
     margin: auto -18px -18px;
+  }
+
+  .toast-region {
+    right: 12px;
+    left: 12px;
+    bottom: 12px;
+    width: auto;
+  }
+
+  .test-card-editing {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Keyboard users need to see where focus lands. */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .spinner,
+  .spinner-big {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
   }
 }

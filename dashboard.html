@@ -1,49 +1,52 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User Dashboard</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="icon" href="favicon.ico" />
-</head>
-<body>
-<canvas id="snow"></canvas>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Your assigned tests and past results." />
+    <title>Dashboard · Exam Portal</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/src/styles/style.css" />
+  </head>
+  <body>
+    <canvas id="snow" aria-hidden="true"></canvas>
 
-<a class="profile-menu" id="profileMenu" href="profile.html" aria-label="Open profile settings">
-  <img id="profileIcon" class="profile-icon" alt="" />
-</a>
+    <a class="profile-menu" href="profile.html" aria-label="Open profile settings">
+      <img id="profileIcon" class="profile-icon" alt="Your profile picture" />
+    </a>
 
-<main class="card dashboard-card">
-  <div class="page-header">
-    <div>
-      <p class="eyebrow">Student Dashboard</p>
-      <h1 id="welcomeText">Welcome!</h1>
-      <p class="sub">Track assigned tests, start new attempts, and review your scores.</p>
-    </div>
-  </div>
+    <main class="card dashboard-card">
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">Student Dashboard</p>
+          <h1 id="welcomeText">Welcome!</h1>
+          <p class="sub">Track assigned tests, start new attempts, and review your scores.</p>
+        </div>
+      </header>
 
-  <div class="section-title">
-    <h3>Available Tests</h3>
-    <span id="testsCount">0 pending</span>
-  </div>
-  <div id="testsList"></div>
+      <section>
+        <div class="section-title">
+          <h2>Available Tests</h2>
+          <span id="testsCount">0 pending</span>
+        </div>
+        <div id="testsList"></div>
+      </section>
 
-  <div class="section-title section">
-    <h3>Previous Results</h3>
-    <span id="resultsCount">0 attempts</span>
-  </div>
-  <div id="resultsList"></div>
+      <section class="section">
+        <div class="section-title">
+          <h2>Previous Results</h2>
+          <span id="resultsCount">0 attempts</span>
+        </div>
+        <div id="resultsList"></div>
+      </section>
 
-  <button id="logoutBtn" type="button" class="secondary">Logout</button>
-</main>
+      <button type="button" class="secondary" data-logout>Logout</button>
+    </main>
 
-<footer class="credits-bar">
-  2026 Made by <span class="name">Harshvardhan Dhankhar</span>
-</footer>
+    <footer class="credits-bar">
+      2026 Made by <span class="name">Harshvardhan Dhankhar</span>
+    </footer>
 
-<script type="module" src="js/dashboard.js"></script>
-<script type="module" src="js/profileMenu.js"></script>
-<script type="module" src="js/snow.js"></script>
-</body>
+    <script type="module" src="/src/pages/dashboard.js"></script>
+  </body>
 </html>

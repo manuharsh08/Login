@@ -1,86 +1,86 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Panel</title>
-  <link rel="stylesheet" href="./css/style.css"/>
-  <link rel="icon" href="favicon.ico" />
-</head>
-<body>
-<canvas id="snow"></canvas>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Manage tests and monitor student performance." />
+    <title>Admin Panel · Exam Portal</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/src/styles/style.css" />
+  </head>
+  <body>
+    <canvas id="snow" aria-hidden="true"></canvas>
 
-<main class="card dashboard-card">
-  <div class="page-header">
-    <div>
-      <p class="eyebrow">Admin</p>
-      <h1>Admin Dashboard</h1>
-      <p class="sub">Manage tests and monitor student performance.</p>
-    </div>
-  </div>
+    <main class="card dashboard-card">
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">Admin</p>
+          <h1>Admin Dashboard</h1>
+          <p class="sub">Manage tests and monitor student performance.</p>
+        </div>
+      </header>
 
-  <div class="stats">
-    <div class="stat-box">
-      <h2 id="totalTests">0</h2>
-      <p>Total Tests</p>
-    </div>
+      <div class="stats">
+        <div class="stat-box">
+          <p id="totalTests" class="stat-value">0</p>
+          <p>Total Tests</p>
+        </div>
 
-    <div class="stat-box">
-      <h2 id="totalAttempts">0</h2>
-      <p>Attempts</p>
-    </div>
+        <div class="stat-box">
+          <p id="totalAttempts" class="stat-value">0</p>
+          <p>Attempts</p>
+        </div>
 
-    <div class="stat-box">
-      <h2 id="avgScore">0%</h2>
-      <p>Avg Score</p>
-    </div>
-  </div>
+        <div class="stat-box">
+          <p id="avgScore" class="stat-value">0%</p>
+          <p>Avg Score</p>
+        </div>
+      </div>
 
-  <div class="section">
-    <h3>Create Test</h3>
+      <section class="section">
+        <h2>Create Test</h2>
 
-    <div class="form-stack">
-      <label class="field" for="testTitle">
-        <span>Test Title</span>
-        <input id="testTitle" type="text" placeholder="Unit 1 Assessment" />
-      </label>
-      <label class="field" for="testSubject">
-        <span>Subject</span>
-        <input id="testSubject" type="text" placeholder="Mathematics" />
-      </label>
-      <label class="field" for="testLink">
-        <span>Google Form Link</span>
-        <input id="testLink" type="url" placeholder="https://forms.gle/..." />
-      </label>
-    </div>
+        <form class="form-stack" novalidate>
+          <div class="field">
+            <label for="testTitle">Test Title</label>
+            <input id="testTitle" type="text" placeholder="Unit 1 Assessment" required />
+          </div>
+          <div class="field">
+            <label for="testSubject">Subject</label>
+            <input id="testSubject" type="text" placeholder="Mathematics" required />
+          </div>
+          <div class="field">
+            <label for="testLink">Google Form Link</label>
+            <input id="testLink" type="url" placeholder="https://forms.gle/..." required />
+          </div>
+        </form>
 
-    <button id="addTestBtn" type="button">Add Test</button>
-  </div>
+        <button id="addTestBtn" type="button">Add Test</button>
+      </section>
 
-  <div class="section">
-    <div class="section-title">
-      <h3>All Tests</h3>
-      <span id="adminTestsCount">0 tests</span>
-    </div>
-    <div id="adminTestsList"></div>
-  </div>
+      <section class="section">
+        <div class="section-title">
+          <h2>All Tests</h2>
+          <span id="adminTestsCount">0 tests</span>
+        </div>
+        <div id="adminTestsList"></div>
+      </section>
 
-  <div class="section">
-    <div class="section-title">
-      <h3>Student Results</h3>
-      <span id="adminResultsCount">0 results</span>
-    </div>
-    <div id="adminResultsList"></div>
-  </div>
+      <section class="section">
+        <div class="section-title">
+          <h2>Student Results</h2>
+          <span id="adminResultsCount">0 results</span>
+        </div>
+        <div id="adminResultsList"></div>
+      </section>
 
-  <button id="logoutBtn" type="button" class="secondary">Logout</button>
-</main>
+      <button type="button" class="secondary" data-logout>Logout</button>
+    </main>
 
-<footer class="credits-bar">
-  2026 Made by <span class="author">Harshvardhan Dhankhar</span>
-</footer>
+    <footer class="credits-bar">
+      2026 Made by <span class="author">Harshvardhan Dhankhar</span>
+    </footer>
 
-<script type="module" src="./js/admin.js"></script>
-<script type="module" src="./js/snow.js"></script>
-</body>
+    <script type="module" src="/src/pages/admin.js"></script>
+  </body>
 </html>
