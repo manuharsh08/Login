@@ -1,6 +1,18 @@
-import { supabase } from "../lib/supabase.js";
+import { supabase, isMissingTable, setupHint } from "../lib/supabase.js";
 import { requireAdmin, wireLogout } from "../lib/session.js";
-import { countLabel, el, errorMessage, renderList, setBusy, setNotice, toast } from "../lib/ui.js";
+import { describeVideo } from "../lib/video.js";
+import { dueStatus } from "../lib/dates.js";
+import { changePasswordSection } from "../lib/password.js";
+import {
+  countLabel,
+  el,
+  errorMessage,
+  renderList,
+  setBusy,
+  setNotice,
+  toast,
+  wireTabs,
+} from "../lib/ui.js";
 import "../lib/snow.js";
 
 const addTestBtn = document.getElementById("addTestBtn");
@@ -11,12 +23,36 @@ const adminTestsList = document.getElementById("adminTestsList");
 const adminResultsList = document.getElementById("adminResultsList");
 const adminTestsCount = document.getElementById("adminTestsCount");
 const adminResultsCount = document.getElementById("adminResultsCount");
+const addNoticeBtn = document.getElementById("addNoticeBtn");
+const noticeTitle = document.getElementById("noticeTitle");
+const noticeBody = document.getElementById("noticeBody");
+const noticePinned = document.getElementById("noticePinned");
+const adminNoticesList = document.getElementById("adminNoticesList");
+const adminNoticesCount = document.getElementById("adminNoticesCount");
+const addAssignmentBtn = document.getElementById("addAssignmentBtn");
+const assignmentTitle = document.getElementById("assignmentTitle");
+const assignmentSubject = document.getElementById("assignmentSubject");
+const assignmentDescription = document.getElementById("assignmentDescription");
+const assignmentDue = document.getElementById("assignmentDue");
+const assignmentLink = document.getElementById("assignmentLink");
+const adminAssignmentsList = document.getElementById("adminAssignmentsList");
+const adminAssignmentsCount = document.getElementById("adminAssignmentsCount");
+const addVideoBtn = document.getElementById("addVideoBtn");
+const videoTitle = document.getElementById("videoTitle");
+const videoSubject = document.getElementById("videoSubject");
+const videoDescription = document.getElementById("videoDescription");
+const videoLink = document.getElementById("videoLink");
+const adminVideosList = document.getElementById("adminVideosList");
+const adminVideosCount = document.getElementById("adminVideosCount");
+const totalVideos = document.getElementById("totalVideos");
 const totalTests = document.getElementById("totalTests");
 const totalAttempts = document.getElementById("totalAttempts");
 const avgScore = document.getElementById("avgScore");
 
 await requireAdmin();
 wireLogout();
+wireTabs(document.querySelector('[role="tablist"]'));
+document.getElementById("passwordMount")?.append(changePasswordSection());
 
 function isValidUrl(value) {
   try {
@@ -217,11 +253,15 @@ async function loadResults() {
 }
 
 async function loadStats() {
-  const [tests, attempts, scores] = await Promise.all([
+  const [tests, attempts, scores, videos] = await Promise.all([
     supabase.from("tests").select("*", { count: "exact", head: true }),
     supabase.from("results").select("*", { count: "exact", head: true }),
     supabase.from("results").select("percentage"),
+    supabase.from("videos").select("*", { count: "exact", head: true }),
   ]);
+
+  // The videos table may not exist yet; that must not blank the other tiles.
+  totalVideos.textContent = videos.error ? "0" : (videos.count ?? 0);
 
   if (tests.error || attempts.error || scores.error) {
     console.error("Error loading stats:", (tests.error || attempts.error || scores.error).message);
@@ -238,4 +278,308 @@ async function loadStats() {
   avgScore.textContent = `${Math.round(average)}%`;
 }
 
-await Promise.all([loadTests(), loadResults(), loadStats()]);
+function readVideoForm() {
+  const title = videoTitle.value.trim();
+  const subject = videoSubject.value.trim();
+  const url = videoLink.value.trim();
+
+  if (!title || !subject || !url) {
+    toast("Title, subject and video link are all required.", "error");
+    return null;
+  }
+  if (!isValidUrl(url)) {
+    toast("Enter a valid http(s) video link.", "error");
+    return null;
+  }
+  return {
+    title,
+    subject,
+    description: videoDescription.value.trim() || null,
+    video_url: url,
+  };
+}
+
+addVideoBtn.addEventListener("click", async () => {
+  const payload = readVideoForm();
+  if (!payload) return;
+
+  const reset = setBusy(addVideoBtn, "Adding...");
+  const { error } = await supabase.from("videos").insert([payload]);
+  reset();
+
+  if (error) {
+    console.error("Create video failed:", error.message);
+    toast(
+      isMissingTable(error)
+        ? "Run supabase/migrations/0003_videos.sql to enable video lessons."
+        : errorMessage(error, "Could not add the video."),
+      "error"
+    );
+    return;
+  }
+
+  videoTitle.value = "";
+  videoSubject.value = "";
+  videoDescription.value = "";
+  videoLink.value = "";
+  toast("Video added.", "success");
+
+  await Promise.all([loadVideos(), loadStats()]);
+});
+
+function videoCard(video) {
+  const media = describeVideo(video.video_url);
+  const deleteBtn = el("button", { type: "button", className: "delete-btn", text: "Delete" });
+
+  const meta = [
+    el("h4", { text: video.title }),
+    el("p", { text: video.subject }),
+    el("small", { text: `${media.provider}${video.description ? " — " + video.description : ""}` }),
+  ];
+
+  deleteBtn.addEventListener("click", async () => {
+    if (!confirm(`Delete "${video.title}"? This cannot be undone.`)) return;
+
+    const reset = setBusy(deleteBtn, "Deleting...");
+    const { error } = await supabase.from("videos").delete().eq("id", video.id);
+    reset();
+
+    if (error) {
+      console.error("Delete video failed:", error.message);
+      toast(errorMessage(error, "Could not delete the video."), "error");
+      return;
+    }
+
+    toast("Video deleted.", "success");
+    await Promise.all([loadVideos(), loadStats()]);
+  });
+
+  return el("article", { className: "test-card" }, [
+    el("div", { className: "test-info" }, meta),
+    el("div", { className: "admin-actions" }, [deleteBtn]),
+  ]);
+}
+
+async function loadVideos() {
+  setNotice(adminVideosList, "Loading videos...");
+
+  const { data, error } = await supabase
+    .from("videos")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error loading videos:", error.message);
+    setNotice(
+      adminVideosList,
+      isMissingTable(error)
+        ? setupHint("Video lessons", "0003_videos.sql")
+        : "Could not load videos.",
+      "error"
+    );
+    return;
+  }
+
+  const videos = data ?? [];
+  adminVideosCount.textContent = countLabel(videos.length, "video");
+  renderList(adminVideosList, videos, videoCard, "No videos have been added yet.");
+}
+
+/** A management card with a Delete button, shared by notices and assignments. */
+function managedCard({ className = "test-card", info, label, onDelete, reload }) {
+  const deleteBtn = el("button", { type: "button", className: "delete-btn", text: "Delete" });
+
+  deleteBtn.addEventListener("click", async () => {
+    if (!confirm(`Delete "${label}"? This cannot be undone.`)) return;
+
+    const reset = setBusy(deleteBtn, "Deleting...");
+    const { error } = await onDelete();
+    reset();
+
+    if (error) {
+      console.error("Delete failed:", error.message);
+      toast(errorMessage(error, "Could not delete it."), "error");
+      return;
+    }
+
+    toast("Deleted.", "success");
+    await reload();
+  });
+
+  return el("article", { className }, [
+    el("div", { className: "test-info" }, info),
+    el("div", { className: "admin-actions" }, [deleteBtn]),
+  ]);
+}
+
+addNoticeBtn.addEventListener("click", async () => {
+  const title = noticeTitle.value.trim();
+  const body = noticeBody.value.trim();
+
+  if (!title || !body) {
+    toast("A notice needs both a title and a message.", "error");
+    return;
+  }
+
+  const reset = setBusy(addNoticeBtn, "Posting...");
+  const { error } = await supabase
+    .from("notices")
+    .insert([{ title, body, pinned: noticePinned.checked }]);
+  reset();
+
+  if (error) {
+    console.error("Post notice failed:", error.message);
+    toast(
+      isMissingTable(error)
+        ? setupHint("Notices", "0004_notices_assignments.sql")
+        : errorMessage(error, "Could not post the notice."),
+      "error"
+    );
+    return;
+  }
+
+  noticeTitle.value = "";
+  noticeBody.value = "";
+  noticePinned.checked = false;
+  toast("Notice posted.", "success");
+  await loadNotices();
+});
+
+async function loadNotices() {
+  setNotice(adminNoticesList, "Loading notices...");
+
+  const { data, error } = await supabase
+    .from("notices")
+    .select("*")
+    .order("pinned", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error loading notices:", error.message);
+    setNotice(
+      adminNoticesList,
+      isMissingTable(error)
+        ? setupHint("Notices", "0004_notices_assignments.sql")
+        : "Could not load notices.",
+      "error"
+    );
+    return;
+  }
+
+  const notices = data ?? [];
+  adminNoticesCount.textContent = countLabel(notices.length, "notice");
+
+  renderList(
+    adminNoticesList,
+    notices,
+    notice =>
+      managedCard({
+        label: notice.title,
+        info: [
+          el("h4", { text: `${notice.pinned ? "\u{1F4CC} " : ""}${notice.title}` }),
+          el("p", { text: notice.body }),
+        ],
+        onDelete: () => supabase.from("notices").delete().eq("id", notice.id),
+        reload: loadNotices,
+      }),
+    "No notices have been posted yet."
+  );
+}
+
+addAssignmentBtn.addEventListener("click", async () => {
+  const title = assignmentTitle.value.trim();
+  const subject = assignmentSubject.value.trim();
+  const link = assignmentLink.value.trim();
+
+  if (!title || !subject) {
+    toast("An assignment needs a title and a subject.", "error");
+    return;
+  }
+  if (link && !isValidUrl(link)) {
+    toast("Enter a valid http(s) link, or leave it blank.", "error");
+    return;
+  }
+
+  const reset = setBusy(addAssignmentBtn, "Adding...");
+  const { error } = await supabase.from("assignments").insert([
+    {
+      title,
+      subject,
+      description: assignmentDescription.value.trim() || null,
+      due_date: assignmentDue.value || null,
+      link_url: link || null,
+    },
+  ]);
+  reset();
+
+  if (error) {
+    console.error("Create assignment failed:", error.message);
+    toast(
+      isMissingTable(error)
+        ? setupHint("Assignments", "0004_notices_assignments.sql")
+        : errorMessage(error, "Could not add the assignment."),
+      "error"
+    );
+    return;
+  }
+
+  [
+    assignmentTitle,
+    assignmentSubject,
+    assignmentDescription,
+    assignmentDue,
+    assignmentLink,
+  ].forEach(input => (input.value = ""));
+  toast("Assignment added.", "success");
+  await loadAssignments();
+});
+
+async function loadAssignments() {
+  setNotice(adminAssignmentsList, "Loading assignments...");
+
+  const { data, error } = await supabase
+    .from("assignments")
+    .select("*")
+    .order("due_date", { ascending: true, nullsFirst: false });
+
+  if (error) {
+    console.error("Error loading assignments:", error.message);
+    setNotice(
+      adminAssignmentsList,
+      isMissingTable(error)
+        ? setupHint("Assignments", "0004_notices_assignments.sql")
+        : "Could not load assignments.",
+      "error"
+    );
+    return;
+  }
+
+  const assignments = data ?? [];
+  adminAssignmentsCount.textContent = countLabel(assignments.length, "assignment");
+
+  renderList(
+    adminAssignmentsList,
+    assignments,
+    assignment =>
+      managedCard({
+        label: assignment.title,
+        info: [
+          el("h4", { text: assignment.title }),
+          el("p", { text: assignment.subject }),
+          el("small", { text: dueStatus(assignment.due_date).label }),
+        ],
+        onDelete: () => supabase.from("assignments").delete().eq("id", assignment.id),
+        reload: loadAssignments,
+      }),
+    "No assignments have been set yet."
+  );
+}
+
+await Promise.all([
+  loadTests(),
+  loadResults(),
+  loadVideos(),
+  loadNotices(),
+  loadAssignments(),
+  loadStats(),
+]);

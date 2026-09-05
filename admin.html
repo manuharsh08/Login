@@ -16,7 +16,7 @@
         <div>
           <p class="eyebrow">Admin</p>
           <h1>Admin Dashboard</h1>
-          <p class="sub">Manage tests and monitor student performance.</p>
+          <p class="sub">Manage content and monitor student performance.</p>
         </div>
       </header>
 
@@ -24,6 +24,11 @@
         <div class="stat-box">
           <p id="totalTests" class="stat-value">0</p>
           <p>Total Tests</p>
+        </div>
+
+        <div class="stat-box">
+          <p id="totalVideos" class="stat-value">0</p>
+          <p>Videos</p>
         </div>
 
         <div class="stat-box">
@@ -37,28 +42,169 @@
         </div>
       </div>
 
-      <section class="section">
-        <h2>Create Test</h2>
+      <nav class="tabs" role="tablist" aria-label="Admin sections">
+        <button type="button" class="tab" role="tab" data-tab="notices" aria-selected="true">
+          Notices
+        </button>
+        <button type="button" class="tab" role="tab" data-tab="assignments" aria-selected="false">
+          Assignments
+        </button>
+        <button type="button" class="tab" role="tab" data-tab="videos" aria-selected="false">
+          Videos
+        </button>
+        <button type="button" class="tab" role="tab" data-tab="tests" aria-selected="false">
+          Tests
+        </button>
+        <button type="button" class="tab" role="tab" data-tab="results" aria-selected="false">
+          Results
+        </button>
+        <button type="button" class="tab" role="tab" data-tab="account" aria-selected="false">
+          Account
+        </button>
+      </nav>
 
-        <form class="form-stack" novalidate>
-          <div class="field">
-            <label for="testTitle">Test Title</label>
-            <input id="testTitle" type="text" placeholder="Unit 1 Assessment" required />
-          </div>
-          <div class="field">
-            <label for="testSubject">Subject</label>
-            <input id="testSubject" type="text" placeholder="Mathematics" required />
-          </div>
-          <div class="field">
-            <label for="testLink">Google Form Link</label>
-            <input id="testLink" type="url" placeholder="https://forms.gle/..." required />
-          </div>
-        </form>
+      <!-- Notices -->
+      <section id="panel-notices" role="tabpanel">
+        <div class="panel-form">
+          <h2>Post Notice</h2>
 
-        <button id="addTestBtn" type="button">Add Test</button>
+          <form class="form-stack" novalidate>
+            <div class="field">
+              <label for="noticeTitle">Title</label>
+              <input id="noticeTitle" type="text" placeholder="Exams begin next Monday" required />
+            </div>
+            <div class="field">
+              <label for="noticeBody">Message</label>
+              <textarea
+                id="noticeBody"
+                rows="3"
+                placeholder="Details students should know"
+                required
+              ></textarea>
+            </div>
+            <label class="checkbox-field" for="noticePinned">
+              <input id="noticePinned" type="checkbox" />
+              <span>Pin to the top of the notice board</span>
+            </label>
+          </form>
+
+          <button id="addNoticeBtn" type="button">Post Notice</button>
+        </div>
+
+        <div class="section-title">
+          <h2>All Notices</h2>
+          <span id="adminNoticesCount">0 notices</span>
+        </div>
+        <div id="adminNoticesList"></div>
       </section>
 
-      <section class="section">
+      <!-- Assignments -->
+      <section id="panel-assignments" role="tabpanel" hidden>
+        <div class="panel-form">
+          <h2>Create Assignment</h2>
+
+          <form class="form-stack" novalidate>
+            <div class="field">
+              <label for="assignmentTitle">Title</label>
+              <input id="assignmentTitle" type="text" placeholder="Chapter 4 worksheet" required />
+            </div>
+            <div class="field">
+              <label for="assignmentSubject">Subject</label>
+              <input id="assignmentSubject" type="text" placeholder="Mathematics" required />
+            </div>
+            <div class="field">
+              <label for="assignmentDescription">
+                Description <span class="optional">(optional)</span>
+              </label>
+              <input id="assignmentDescription" type="text" placeholder="What students must do" />
+            </div>
+            <div class="field">
+              <label for="assignmentDue">Due date <span class="optional">(optional)</span></label>
+              <input id="assignmentDue" type="date" />
+            </div>
+            <div class="field">
+              <label for="assignmentLink">Link <span class="optional">(optional)</span></label>
+              <input id="assignmentLink" type="url" placeholder="https://drive.google.com/..." />
+            </div>
+          </form>
+
+          <button id="addAssignmentBtn" type="button">Add Assignment</button>
+        </div>
+
+        <div class="section-title">
+          <h2>All Assignments</h2>
+          <span id="adminAssignmentsCount">0 assignments</span>
+        </div>
+        <div id="adminAssignmentsList"></div>
+      </section>
+
+      <!-- Videos -->
+      <section id="panel-videos" role="tabpanel" hidden>
+        <div class="panel-form">
+          <h2>Add Video Lesson</h2>
+
+          <form class="form-stack" novalidate>
+            <div class="field">
+              <label for="videoTitle">Title</label>
+              <input id="videoTitle" type="text" placeholder="Introduction to Algebra" required />
+            </div>
+            <div class="field">
+              <label for="videoSubject">Subject</label>
+              <input id="videoSubject" type="text" placeholder="Mathematics" required />
+            </div>
+            <div class="field">
+              <label for="videoDescription">
+                Description <span class="optional">(optional)</span>
+              </label>
+              <input id="videoDescription" type="text" placeholder="What this lesson covers" />
+            </div>
+            <div class="field">
+              <label for="videoLink">Video link</label>
+              <input
+                id="videoLink"
+                type="url"
+                placeholder="https://youtube.com/watch?v=..."
+                required
+              />
+              <small class="hint">
+                YouTube and Vimeo links play inline. Anything else opens in a new tab.
+              </small>
+            </div>
+          </form>
+
+          <button id="addVideoBtn" type="button">Add Video</button>
+        </div>
+
+        <div class="section-title">
+          <h2>All Videos</h2>
+          <span id="adminVideosCount">0 videos</span>
+        </div>
+        <div id="adminVideosList"></div>
+      </section>
+
+      <!-- Tests -->
+      <section id="panel-tests" role="tabpanel" hidden>
+        <div class="panel-form">
+          <h2>Create Test</h2>
+
+          <form class="form-stack" novalidate>
+            <div class="field">
+              <label for="testTitle">Test Title</label>
+              <input id="testTitle" type="text" placeholder="Unit 1 Assessment" required />
+            </div>
+            <div class="field">
+              <label for="testSubject">Subject</label>
+              <input id="testSubject" type="text" placeholder="Mathematics" required />
+            </div>
+            <div class="field">
+              <label for="testLink">Google Form Link</label>
+              <input id="testLink" type="url" placeholder="https://forms.gle/..." required />
+            </div>
+          </form>
+
+          <button id="addTestBtn" type="button">Add Test</button>
+        </div>
+
         <div class="section-title">
           <h2>All Tests</h2>
           <span id="adminTestsCount">0 tests</span>
@@ -66,12 +212,18 @@
         <div id="adminTestsList"></div>
       </section>
 
-      <section class="section">
+      <!-- Results -->
+      <section id="panel-results" role="tabpanel" hidden>
         <div class="section-title">
           <h2>Student Results</h2>
           <span id="adminResultsCount">0 results</span>
         </div>
         <div id="adminResultsList"></div>
+      </section>
+
+      <!-- Account -->
+      <section id="panel-account" role="tabpanel" hidden>
+        <div id="passwordMount"></div>
       </section>
 
       <button type="button" class="secondary" data-logout>Logout</button>

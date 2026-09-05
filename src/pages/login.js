@@ -1,6 +1,7 @@
 import { supabase } from "../lib/supabase.js";
 import { getRole } from "../lib/session.js";
-import { errorMessage, onSubmit, setBusy } from "../lib/ui.js";
+import { sendResetEmail } from "../lib/password.js";
+import { errorMessage, onSubmit, setBusy, toast } from "../lib/ui.js";
 import "../lib/snow.js";
 
 const emailEl = document.getElementById("email");
@@ -8,6 +9,7 @@ const passwordEl = document.getElementById("password");
 const loginBtn = document.getElementById("loginBtn");
 const loader = document.getElementById("loader");
 const errorEl = document.getElementById("loginError");
+const forgotBtn = document.getElementById("forgotBtn");
 
 let inFlight = false;
 
@@ -47,5 +49,31 @@ async function login() {
   }
 }
 
+async function forgotPassword() {
+  const email = emailEl.value.trim();
+
+  if (!email) {
+    showError("Enter your email address above, then choose Forgot password.");
+    emailEl.focus();
+    return;
+  }
+
+  showError("");
+  const reset = setBusy(forgotBtn, "Sending...");
+
+  try {
+    await sendResetEmail(email);
+    // Deliberately unconditional: confirming which addresses exist would leak
+    // who has an account here.
+    toast(`If an account exists for ${email}, a reset link is on its way.`, "success");
+  } catch (err) {
+    console.error("Reset email failed:", err);
+    showError(errorMessage(err, "Could not send the reset email. Try again shortly."));
+  } finally {
+    reset();
+  }
+}
+
 loginBtn?.addEventListener("click", login);
+forgotBtn?.addEventListener("click", forgotPassword);
 onSubmit([emailEl, passwordEl], login);

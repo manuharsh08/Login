@@ -99,3 +99,39 @@ export function onSubmit(inputs, handler) {
     });
   });
 }
+
+/**
+ * Wires a [role="tablist"] of [data-tab] buttons to #panel-<name> sections.
+ * Keeps one panel visible at a time and supports arrow-key navigation.
+ */
+export function wireTabs(tablist) {
+  if (!tablist) return;
+
+  const tabs = [...tablist.querySelectorAll("[data-tab]")];
+  const panelFor = tab => document.getElementById(`panel-${tab.dataset.tab}`);
+
+  function select(tab) {
+    tabs.forEach(other => {
+      const active = other === tab;
+      other.setAttribute("aria-selected", String(active));
+      other.classList.toggle("tab-active", active);
+
+      const panel = panelFor(other);
+      if (panel) panel.hidden = !active;
+    });
+    tab.focus();
+  }
+
+  tabs.forEach((tab, index) => {
+    tab.addEventListener("click", () => select(tab));
+    tab.addEventListener("keydown", event => {
+      const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+      if (!step) return;
+      event.preventDefault();
+      select(tabs[(index + step + tabs.length) % tabs.length]);
+    });
+  });
+
+  const initial = tabs.find(tab => tab.getAttribute("aria-selected") === "true") ?? tabs[0];
+  if (initial) select(initial);
+}
