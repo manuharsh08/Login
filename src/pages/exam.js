@@ -3,6 +3,7 @@ import { requireUser } from "../lib/session.js";
 import { el, errorMessage, setBusy, setNotice, toast } from "../lib/ui.js";
 import { formatClock, formatDateTime, formatDuration } from "../lib/dates.js";
 import { isRunningInSeb, sebQuitUrl } from "../lib/seb.js";
+import { mathText, setMathText } from "../lib/math.js";
 import "../lib/snow.js";
 
 const subjectEl = document.getElementById("examSubject");
@@ -108,7 +109,7 @@ function choiceInput(question, option) {
     updateAnsweredCount();
   });
 
-  return el("label", { className: "choice" }, [input, el("span", { text: option.text })]);
+  return el("label", { className: "choice" }, [input, setMathText(el("span"), option.text)]);
 }
 
 function questionCard(question, index) {
@@ -116,7 +117,8 @@ function questionCard(question, index) {
 
   const header = el("div", { className: "question-head" }, [
     el("span", { className: "question-number", text: `Q${index + 1}` }),
-    el("p", { className: "question-prompt", text: question.prompt }),
+    // The prompt is stored as LaTeX source; students see it typeset.
+    mathText("p", { className: "question-prompt" }, question.prompt),
     el("span", {
       className: "question-points",
       text: `${points} ${points === 1 ? "mark" : "marks"}`,

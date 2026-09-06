@@ -125,6 +125,39 @@ lockdown** on each test while viewing it from the new address — a config that
 still points at the old one blocks the exam from inside SEB, which looks to a
 student like a failed login.
 
+### Maths questions
+
+Questions, options and the saved-question list all understand LaTeX. Write a
+formula between dollar signs and it is typeset wherever it appears:
+
+```
+What is the value of $x$ when $x^2 - 5x + 6 = 0$?
+```
+
+`$$ ... $$` centres a formula on its own line; `\( ... \)` and `\[ ... \]`
+work too, which is what you usually get from pasting out of a textbook or
+Word's equation editor. A literal dollar sign is `\$`.
+
+The question builder has a symbol palette — fractions, roots, sums, integrals,
+π, ±, ≤, matrices — which inserts into whichever box you were last typing in,
+and puts the cursor inside the bracket you need to fill. Under each box a
+**Looks like** strip shows the typeset result as soon as the text contains a
+formula, so nothing is saved that you have not seen rendered. Boxes with no
+maths in them never show the strip.
+
+What is stored is the LaTeX source, so a question stays editable and no data
+depends on how it was typeset. A half-finished formula renders the broken part
+in red rather than blanking the question.
+
+One exception: the **Correct answer** box for short-answer questions is matched
+as plain text against what the student types, so it is not typeset. Keep those
+answers typeable — `x^2` or `3.14`, not `$x^{2}$`.
+
+Typesetting is [KaTeX](https://katex.org), bundled rather than loaded from a
+CDN — the lockdown browser's URL filter would block an external CDN, and an
+exam should not depend on someone else's uptime. It is split into its own
+chunk, so only the admin and exam pages download it.
+
 ### What the lockdown config does
 
 `src/lib/seb.js` generates a standard exam configuration: full-screen kiosk
