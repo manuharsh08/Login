@@ -1,6 +1,8 @@
 import { supabase } from "../lib/supabase.js";
 import { requireUser } from "../lib/session.js";
 import { el, errorMessage, setBusy, setNotice, toast } from "../lib/ui.js";
+import { formatClock, formatDateTime, formatDuration } from "../lib/dates.js";
+import { isRunningInSeb, sebQuitUrl } from "../lib/seb.js";
 import "../lib/snow.js";
 
 const subjectEl = document.getElementById("examSubject");
@@ -13,6 +15,11 @@ const answeredEl = document.getElementById("answeredCount");
 const submitBtn = document.getElementById("submitBtn");
 const resultEl = document.getElementById("examResult");
 const backBtn = document.getElementById("backBtn");
+const clockEl = document.getElementById("examClock");
+const clockValueEl = document.getElementById("examClockValue");
+
+/** Seconds SEB stays open after a submission, so the student sees their score. */
+const CLOSE_DELAY_SECONDS = 3;
 
 backBtn.addEventListener("click", () => location.replace("dashboard.html"));
 
@@ -23,6 +30,52 @@ const testId = new URLSearchParams(location.search).get("test");
 /** Answers keyed by question id: string[] for choices, string for free text. */
 const answers = new Map();
 let questions = [];
+let submitted = false;
+let timerId = null;
+
+/**
+ * When this exam ends, in *browser* milliseconds.
+ *
+ * The value comes from the server and is corrected for the difference between
+ * the two clocks, so a student who puts their laptop's clock back an hour
+ * gains nothing. null means the test is untimed.
+ */
+let endsAtMs = null;
+
+function stopTimer() {
+  if (timerId !== null) {
+    clearInterval(timerId);
+    timerId = null;
+  }
+}
+
+/**
+ * Inside SEB, close the browser shortly after submitting.
+ *
+ * Navigating to the config's quitURL is what actually quits SEB; the delay
+ * only exists so the student can read their score first. Outside SEB there is
+ * nothing to close, so the Back button stands in for it.
+ */
+function closeAfterSubmit(container) {
+  if (!isRunningInSeb()) return;
+
+  const line = el("p", { className: "exam-closing" });
+  container.append(line);
+
+  let left = CLOSE_DELAY_SECONDS;
+  const tick = () => {
+    line.textContent = `Safe Exam Browser closes in ${left}...`;
+    if (left <= 0) {
+      clearInterval(id);
+      location.href = sebQuitUrl();
+      return;
+    }
+    left -= 1;
+  };
+
+  const id = setInterval(tick, 1000);
+  tick();
+}
 
 function updateAnsweredCount() {
   const done = questions.filter(question => {
@@ -100,27 +153,52 @@ function showResult({ score, total, percentage }) {
 
   const passed = Number(percentage) >= 40;
 
-  resultEl.replaceChildren(
-    el("div", { className: `result-panel ${passed ? "result-pass" : "result-fail"}` }, [
-      el("p", { className: "result-eyebrow", text: "Submitted" }),
-      el("p", { className: "result-score", text: `${score} / ${total}` }),
-      el("p", { className: "result-percent", text: `${percentage}%` }),
-      el("p", {
-        className: "sub",
-        text: "Your teacher can see this result now. It is also on your dashboard.",
-      }),
-    ])
-  );
+  const panel = el("div", { className: `result-panel ${passed ? "result-pass" : "result-fail"}` }, [
+    el("p", { className: "result-eyebrow", text: "Submitted" }),
+    el("p", { className: "result-score", text: `${score} / ${total}` }),
+    el("p", { className: "result-percent", text: `${percentage}%` }),
+    el("p", {
+      className: "sub",
+      text: "Your teacher can see this result now. It is also on your dashboard.",
+    }),
+  ]);
+
+  resultEl.replaceChildren(panel);
+  closeAfterSubmit(panel);
 }
 
-async function submit() {
-  const unanswered = questions.length - Number(answeredEl.textContent.split(" ")[0]);
-  if (unanswered > 0) {
-    const ok = confirm(`${unanswered} question(s) are unanswered. Submit anyway?`);
-    if (!ok) return;
+/** Ends the exam without a score, e.g. when time ran out before submitting. */
+function endWithNotice(message, tone = "error") {
+  formEl.hidden = true;
+  resultEl.hidden = false;
+
+  const panel = el("div", { className: "result-panel result-fail" }, [
+    el("p", { className: `notice notice-${tone}`, text: message }),
+  ]);
+
+  resultEl.replaceChildren(panel);
+  closeAfterSubmit(panel);
+}
+
+/**
+ * @param {boolean} auto True when the timer fired rather than the student.
+ */
+async function submit(auto = false) {
+  if (submitted) return;
+
+  if (!auto) {
+    const unanswered = questions.length - Number(answeredEl.textContent.split(" ")[0]);
+    if (unanswered > 0 && !confirm(`${unanswered} question(s) are unanswered. Submit anyway?`)) {
+      return;
+    }
   }
 
-  const reset = setBusy(submitBtn, "Submitting...");
+  // Set before the request, not after: a second click while it is in flight
+  // would otherwise be graded as a duplicate attempt.
+  submitted = true;
+  stopTimer();
+
+  const reset = setBusy(submitBtn, auto ? "Time up — submitting..." : "Submitting...");
 
   try {
     // Graded on the server: the browser never sees the answer key, and the
@@ -132,18 +210,106 @@ async function submit() {
     if (error) throw error;
 
     showResult(data);
-    toast("Test submitted and graded.", "success");
+    toast(auto ? "Time is up. Your test was submitted." : "Test submitted and graded.", "success");
   } catch (err) {
     console.error("Submit failed:", err);
-    toast(
+
+    const message =
       err?.code === "PGRST202"
-        ? "Built-in tests are not set up yet. Run supabase/migrations/0007_builtin_exams.sql."
-        : errorMessage(err, "Could not submit your test."),
-      "error"
-    );
+        ? "Built-in tests are not set up yet. Run supabase/migrations/0008_exam_delivery.sql."
+        : errorMessage(err, "Could not submit your test.");
+
+    // An auto-submit has no one to retry it — the time it needed is gone — so
+    // it ends the exam rather than handing back a button that cannot work.
+    if (auto) {
+      endWithNotice(message);
+      return;
+    }
+
+    submitted = false;
+    startTimer();
+    toast(message, "error");
     reset();
   }
 }
+
+function renderClock() {
+  if (endsAtMs === null) return;
+
+  const left = endsAtMs - Date.now();
+  clockValueEl.textContent = formatClock(left);
+
+  // Colour is the warning a student actually notices; the toast below is for
+  // anyone who has scrolled the header out of view.
+  clockEl.classList.toggle("exam-clock-warn", left <= 5 * 60000 && left > 60000);
+  clockEl.classList.toggle("exam-clock-danger", left <= 60000);
+
+  if (left <= 0) {
+    stopTimer();
+    submit(true);
+  }
+}
+
+function startTimer() {
+  if (endsAtMs === null || submitted) return;
+
+  stopTimer();
+  clockEl.hidden = false;
+  renderClock();
+  timerId = setInterval(renderClock, 1000);
+}
+
+/**
+ * Anchors the countdown to the server's clock.
+ *
+ * ends_at and server_time are read in the same statement on the server, so
+ * their difference is the true time remaining however wrong the browser's
+ * clock is.
+ */
+function armTimer({ ends_at: endsAt, server_time: serverTime }) {
+  if (!endsAt) return;
+
+  const end = Date.parse(endsAt);
+  const server = Date.parse(serverTime);
+  if (Number.isNaN(end) || Number.isNaN(server)) return;
+
+  endsAtMs = Date.now() + (end - server);
+  startTimer();
+
+  const remaining = endsAtMs - Date.now();
+  if (remaining > 60000) {
+    toast(`You have ${formatClock(remaining)} to finish this test.`, "info");
+  }
+}
+
+function describeTest(test) {
+  titleEl.textContent = test.title;
+  subjectEl.textContent = test.subject;
+  document.title = `${test.title} · Exam Portal`;
+}
+
+/** Sub-heading under the title: length of the paper and its time limits. */
+function describeMeta(test) {
+  const parts = [];
+
+  if (questions.length) {
+    const marks = questions.reduce((sum, question) => sum + (Number(question.points) || 1), 0);
+    parts.push(`${questions.length} question${questions.length === 1 ? "" : "s"} · ${marks} marks`);
+  }
+  if (test.duration_minutes) parts.push(formatDuration(test.duration_minutes));
+  if (test.closes_at) parts.push(`Closes ${formatDateTime(test.closes_at)}`);
+
+  metaEl.textContent = parts.join(" · ");
+}
+
+/** States get_exam can return that end the page before any question loads. */
+const BLOCKED = {
+  not_found: "That test no longer exists.",
+  not_released: "Your teacher has not released this test yet.",
+  already_attempted: "You have already submitted this test. Your result is on your dashboard.",
+  closed: "The deadline for this test has passed.",
+  time_up: "Your time for this test has run out.",
+};
 
 async function loadExam() {
   if (!testId) {
@@ -164,24 +330,26 @@ async function loadExam() {
     setNotice(
       stateEl,
       notSetUp
-        ? "Built-in tests are not set up yet. Run supabase/migrations/0007_builtin_exams.sql."
+        ? "Built-in tests are not set up yet. Run supabase/migrations/0008_exam_delivery.sql."
         : "Could not load this test. Please go back and try again.",
       "error"
     );
     return;
   }
 
-  if (!data?.test) {
-    setNotice(stateEl, "That test no longer exists.", "error");
+  if (data?.test) describeTest(data.test);
+
+  const blocked = BLOCKED[data?.state];
+  if (blocked) {
+    setNotice(stateEl, blocked, data.state === "already_attempted" ? "info" : "error");
     return;
   }
 
-  titleEl.textContent = data.test.title;
-  subjectEl.textContent = data.test.subject;
-  document.title = `${data.test.title} · Exam Portal`;
-
-  if (data.already_attempted) {
-    setNotice(stateEl, "You have already submitted this test. Your result is on your dashboard.");
+  // A link test lives on Google Forms or similar; this page only forwards to it.
+  if (data.state === "external") {
+    setNotice(stateEl, "Opening your test...");
+    if (data.form_url) location.replace(data.form_url);
+    else setNotice(stateEl, "This test has no link set. Please tell your teacher.", "error");
     return;
   }
 
@@ -192,14 +360,23 @@ async function loadExam() {
     return;
   }
 
-  const marks = questions.reduce((sum, question) => sum + (Number(question.points) || 1), 0);
-  metaEl.textContent = `${questions.length} question${questions.length === 1 ? "" : "s"} · ${marks} marks`;
-
+  describeMeta(data.test);
   stateEl.replaceChildren();
+
+  // An admin opening a draft sees the paper exactly as a student would, but
+  // with no clock and no way to submit — previewing must not create a result.
+  if (data.state === "preview") {
+    setNotice(stateEl, "Preview of a draft. Students cannot open this test yet.", "info");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Preview only";
+  }
+
   listEl.replaceChildren(...questions.map(questionCard));
   formEl.hidden = false;
   updateAnsweredCount();
+
+  if (data.state === "open") armTimer(data);
 }
 
-submitBtn.addEventListener("click", submit);
+submitBtn.addEventListener("click", () => submit(false));
 await loadExam();

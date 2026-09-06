@@ -1386,3 +1386,113 @@ select:focus {
     animation-iteration-count: infinite !important;
   }
 }
+
+/* --- exam countdown ------------------------------------------------------ */
+
+.exam-clock {
+  min-width: 8.5rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.55);
+  text-align: center;
+}
+
+.exam-clock-label {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.exam-clock-value {
+  margin: 0.15rem 0 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #e2e8f0;
+}
+
+/* Five minutes left, then one: colour is what a student actually notices. */
+.exam-clock-warn {
+  border-color: rgba(251, 191, 36, 0.5);
+}
+
+.exam-clock-warn .exam-clock-value {
+  color: #fbbf24;
+}
+
+.exam-clock-danger {
+  border-color: rgba(248, 113, 113, 0.6);
+  animation: clock-pulse 1s ease-in-out infinite;
+}
+
+.exam-clock-danger .exam-clock-value {
+  color: #f87171;
+}
+
+@keyframes clock-pulse {
+  50% {
+    background: rgba(127, 29, 29, 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exam-clock-danger {
+    animation: none;
+  }
+}
+
+.exam-closing {
+  margin: 1rem 0 0;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- test status --------------------------------------------------------- */
+
+.test-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.pill-draft {
+  background: rgba(148, 163, 184, 0.18);
+  color: #cbd5e1;
+}
+
+.pill-live {
+  background: rgba(45, 212, 191, 0.18);
+  color: #5eead4;
+}
+
+.pill-closed {
+  background: rgba(248, 113, 113, 0.18);
+  color: #fca5a5;
+}
+
+.test-card-closed {
+  opacity: 0.65;
+}
+
+.modal-rules {
+  margin: 0.75rem 0 0;
+  padding-left: 1.1rem;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.modal-rules li + li {
+  margin-top: 0.4rem;
+}
+
+@media (max-width: 640px) {
+  .exam-clock {
+    width: 100%;
+  }
+}

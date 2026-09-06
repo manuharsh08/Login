@@ -10,6 +10,7 @@
  */
 import { el, openModal, toast } from "./ui.js";
 import { examPageUrl, isRunningInSeb, sebLaunchUrl } from "./seb.js";
+import { formatDateTime, formatDuration } from "./dates.js";
 
 const SEB_DOWNLOAD_PAGE = "https://safeexambrowser.org/download_en.html";
 
@@ -53,6 +54,31 @@ export async function openSebGate(test) {
         "that prevents other apps, tabs and copy-paste during the exam."
     ),
   ];
+
+  // Everything below is the part students most often get wrong: they start a
+  // timed paper without realising the clock cannot be paused.
+  const rules = [];
+  if (test.duration_minutes) {
+    rules.push(
+      `You get ${formatDuration(test.duration_minutes)} from the moment the exam opens. ` +
+        "The clock keeps running if you close the window, so start only when you are ready."
+    );
+  }
+  if (test.closes_at) {
+    rules.push(`This test closes at ${formatDateTime(test.closes_at)}.`);
+  }
+  rules.push(
+    "You cannot leave Safe Exam Browser until you submit — it needs a password your " +
+      "teacher holds. It closes by itself a few seconds after you submit."
+  );
+
+  body.push(
+    el(
+      "ul",
+      { className: "modal-rules" },
+      rules.map(rule => el("li", { text: rule }))
+    )
+  );
 
   if (unsupported) {
     body.push(

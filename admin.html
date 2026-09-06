@@ -196,17 +196,62 @@
               <label for="testSubject">Subject</label>
               <input id="testSubject" type="text" placeholder="Mathematics" required />
             </div>
+
+            <div class="field">
+              <label for="testKind">Questions</label>
+              <select id="testKind">
+                <option value="builtin">Write them here (auto-graded)</option>
+                <option value="link">Use a Google Form or other link</option>
+              </select>
+            </div>
+
+            <div class="field" id="testLinkField" hidden>
+              <label for="testLink">Test link</label>
+              <input
+                id="testLink"
+                type="url"
+                placeholder="https://docs.google.com/forms/d/e/.../viewform"
+              />
+              <small class="hint">
+                Opened inside Safe Exam Browser. Marking stays in Google Forms — results will not
+                appear in the Results tab.
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="testDuration"
+                >Maximum time <span class="optional">(optional)</span></label
+              >
+              <input id="testDuration" type="number" min="1" max="600" step="1" placeholder="60" />
+              <small class="hint">
+                Minutes each student gets from the moment they open the test. Timed on the server,
+                so reloading does not reset it.
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="testCloses">Deadline <span class="optional">(optional)</span></label>
+              <input id="testCloses" type="datetime-local" />
+              <small class="hint">Nobody can start or submit after this moment.</small>
+            </div>
+
             <label class="checkbox-field" for="testRequiresSeb">
               <input id="testRequiresSeb" type="checkbox" checked />
               <span>Protect this test with Safe Exam Browser</span>
             </label>
             <small class="hint">
               Leave this on and the portal does the rest: it builds the lockdown configuration,
-              hosts it, and gives students a Launch button.
+              hosts it, sets a quit password so students cannot leave mid-test, and gives students a
+              Launch button.
             </small>
           </form>
 
-          <button id="addTestBtn" type="button">Add Test</button>
+          <button id="addTestBtn" type="button">Create Draft</button>
+
+          <small class="hint">
+            New tests are drafts. Add your questions first, then press Publish — students cannot see
+            a test until you do.
+          </small>
         </div>
 
         <div class="section-title">

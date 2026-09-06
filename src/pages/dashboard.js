@@ -2,7 +2,7 @@ import { supabase, DEFAULT_AVATAR, isMissingTable, setupHint } from "../lib/supa
 import { requireUser, displayName, wireLogout } from "../lib/session.js";
 import { countLabel, el, renderList, setBusy, setNotice, wireTabs } from "../lib/ui.js";
 import { describeVideo } from "../lib/video.js";
-import { dueStatus } from "../lib/dates.js";
+import { dueStatus, isClosed, scheduleLabel } from "../lib/dates.js";
 import { openSebGate } from "../lib/sebGate.js";
 import "../lib/snow.js";
 
@@ -59,6 +59,18 @@ function videoCard(video) {
 
 function testCard(test) {
   const info = [el("h4", { text: test.title }), el("p", { text: test.subject })];
+
+  const schedule = scheduleLabel(test);
+  if (schedule) info.push(el("small", { className: "seb-note", text: schedule }));
+
+  // Past the deadline there is nothing to start, and the server would refuse
+  // anyway — say so here rather than letting the student find out inside SEB.
+  if (isClosed(test)) {
+    return el("article", { className: "test-card test-card-closed" }, [
+      el("div", { className: "test-info" }, info),
+      el("span", { className: "due-badge due-overdue", text: "Closed" }),
+    ]);
+  }
 
   // Tests default to requiring SEB; only an explicit false opens directly.
   if (test.requires_seb === false) {
@@ -279,8 +291,14 @@ async function loadDashboard() {
   const attemptedIds = new Set(allResults.map(result => result.test_id));
 
   if (!tests.error) {
-    const pending = allTests.filter(test => !attemptedIds.has(test.id));
-    testsCount.textContent = `${pending.length} pending`;
+    // Row-level security already hides drafts from students; the filter also
+    // keeps them off an admin's own dashboard, where RLS lets them through.
+    const pending = allTests.filter(
+      test => test.status === "published" && !attemptedIds.has(test.id)
+    );
+    const open = pending.filter(test => !isClosed(test));
+
+    testsCount.textContent = `${open.length} pending`;
     renderList(testsList, pending, testCard, "No tests are available right now.");
   }
 

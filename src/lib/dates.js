@@ -46,3 +46,90 @@ export function dueStatus(value) {
 
   return { label: `Due ${formatted}`, tone: "ok", date };
 }
+
+// --- exam scheduling -------------------------------------------------------
+
+/** "12 Sep 2026, 14:30" — a deadline is a moment, not a calendar day. */
+export function formatDateTime(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.valueOf())) return "";
+
+  return date.toLocaleString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/** "1 hr 30 min" — reads better than "90 minutes" on a card. */
+export function formatDuration(minutes) {
+  const total = Number(minutes);
+  if (!total || total < 1) return "";
+
+  const hours = Math.floor(total / 60);
+  const mins = total % 60;
+
+  if (!hours) return `${mins} min`;
+  return mins ? `${hours} hr ${mins} min` : `${hours} hr`;
+}
+
+/**
+ * Milliseconds as a countdown: "09:58", or "1:09:58" once it passes an hour.
+ * Always rounds up, so a timer never shows 00:00 while time remains.
+ */
+export function formatClock(ms) {
+  const seconds = Math.max(0, Math.ceil(ms / 1000));
+  const pad = value => String(value).padStart(2, "0");
+
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const rest = seconds % 60;
+
+  return hours ? `${hours}:${pad(minutes)}:${pad(rest)}` : `${pad(minutes)}:${pad(rest)}`;
+}
+
+/**
+ * An ISO timestamp as the local value a <input type="datetime-local"> wants.
+ * The input has no timezone, so the UTC string cannot be handed to it as-is.
+ */
+export function toDatetimeLocal(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.valueOf())) return "";
+
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date - offset).toISOString().slice(0, 16);
+}
+
+/** The reverse: what a datetime-local input holds, as an ISO instant. */
+export function fromDatetimeLocal(value) {
+  if (!value) return null;
+
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf()) ? null : date.toISOString();
+}
+
+/** How a student sees a test's window on their dashboard. */
+export function scheduleLabel({ closes_at: closesAt, duration_minutes: duration }) {
+  const parts = [];
+
+  if (duration) parts.push(`${formatDuration(duration)} to complete`);
+  if (closesAt) {
+    const closed = new Date(closesAt) < new Date();
+    parts.push(
+      closed ? `Closed ${formatDateTime(closesAt)}` : `Closes ${formatDateTime(closesAt)}`
+    );
+  }
+
+  return parts.join(" · ");
+}
+
+/** True once a test's deadline has passed. */
+export function isClosed(test) {
+  return Boolean(test?.closes_at) && new Date(test.closes_at) < new Date();
+}
