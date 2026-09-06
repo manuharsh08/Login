@@ -48,6 +48,10 @@ export default defineConfig(({ mode }) => {
           // Without this, Rollup names the shared vendor chunk after whichever
           // module it happened to hoist first (e.g. "snow-*.js").
           manualChunks(id) {
+            // KaTeX is bigger than everything else put together and is only
+            // needed where formulas are written or answered. Left in `vendor`
+            // it would be downloaded by the login page too.
+            if (id.includes("node_modules/katex")) return "katex";
             if (id.includes("node_modules")) return "vendor";
           },
         },

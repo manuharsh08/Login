@@ -7,6 +7,8 @@
  */
 import { supabase } from "./supabase.js";
 import { countLabel, el, errorMessage, renderList, setBusy, setNotice, toast } from "./ui.js";
+import { mathText } from "./math.js";
+import { mathField, mathPalette } from "./mathField.js";
 
 const TYPES = [
   { value: "single", label: "Single choice", hint: "One correct option" },
@@ -23,6 +25,17 @@ function field(labelText, control, hint) {
   const children = [el("label", { text: labelText }), control];
   if (hint) children.push(el("small", { className: "hint", text: hint }));
   return el("div", { className: "field" }, children);
+}
+
+/**
+ * Empties a box and tells its maths preview about it.
+ *
+ * Assigning to .value fires no event, so without this the preview under a
+ * cleared box would keep showing the formula from the question just saved.
+ */
+function clear(input) {
+  input.value = "";
+  input.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
 /** One editable option row: correct-marker, text, remove. */
@@ -61,7 +74,12 @@ function optionRow(option, state, onChange) {
     onChange();
   });
 
-  return el("div", { className: "option-row" }, [marker, text, remove]);
+  // Each option previews on its own line: an option is often the formula that
+  // distinguishes it from the others, and they must be checked side by side.
+  return el("div", { className: "option-block" }, [
+    el("div", { className: "option-row" }, [marker, text, remove]),
+    mathField(text, "Option"),
+  ]);
 }
 
 /** The "add a question" form. Calls onSave with a row ready for insert. */
@@ -79,8 +97,16 @@ function composer(testId, onSaved, nextPosition) {
 
   const optionsBox = el("div", { className: "options-box" });
   const addOptionBtn = el("button", { type: "button", className: "secondary", text: "Add option" });
-  const textField = field("Correct answer", textAnswer, "Case and surrounding spaces are ignored.");
+  const textField = field(
+    "Correct answer",
+    textAnswer,
+    "Matched as plain text against what the student types, so keep it typeable: " +
+      "x^2 or 3.14, not $x^{2}$. Case and surrounding spaces are ignored."
+  );
   const saveBtn = el("button", { type: "button", text: "Add Question" });
+
+  const promptField = field("Question", prompt);
+  promptField.append(mathField(prompt, "Question"));
 
   function renderOptions() {
     optionsBox.replaceChildren(
@@ -164,9 +190,9 @@ function composer(testId, onSaved, nextPosition) {
       return;
     }
 
-    prompt.value = "";
+    clear(prompt);
     points.value = "1";
-    textAnswer.value = "";
+    clear(textAnswer);
     state.options = [];
     state.answerKey = [];
     syncType();
@@ -176,8 +202,11 @@ function composer(testId, onSaved, nextPosition) {
 
   const box = el("div", { className: "panel-form" }, [
     el("h2", { text: "Add Question" }),
+    // One palette for the whole composer: it types into the question box, an
+    // option box, or the answer box — whichever was last focused.
+    mathPalette(prompt),
     el("div", { className: "form-stack" }, [
-      field("Question", prompt),
+      promptField,
       field("Type", typeSelect),
       field("Marks", points),
     ]),
@@ -218,9 +247,9 @@ function questionRow(question, reload) {
 
   return el("article", { className: "test-card" }, [
     el("div", { className: "test-info" }, [
-      el("h4", { text: question.prompt }),
+      mathText("h4", {}, question.prompt),
       el("p", { text: `${typeLabel} · ${question.points} mark(s)` }),
-      el("small", { className: "seb-note", text: `Answer: ${answerText || "not set"}` }),
+      mathText("small", { className: "seb-note" }, `Answer: ${answerText || "not set"}`),
     ]),
     el("div", { className: "admin-actions" }, [remove]),
   ]);
