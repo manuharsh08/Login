@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Take your test." />
+    <title>Test · Exam Portal</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/src/styles/style.css" />
+  </head>
+  <body>
+    <canvas id="snow" aria-hidden="true"></canvas>
+
+    <main class="card dashboard-card">
+      <header class="page-header">
+        <div>
+          <p class="eyebrow" id="examSubject">Test</p>
+          <h1 id="examTitle">Loading...</h1>
+          <p class="sub" id="examMeta"></p>
+        </div>
+      </header>
+
+      <div id="examState"></div>
+
+      <form id="examForm" hidden>
+        <div id="questionList"></div>
+
+        <div class="exam-footer">
+          <p class="sub" id="answeredCount"></p>
+          <button id="submitBtn" type="button">Submit Test</button>
+        </div>
+      </form>
+
+      <div id="examResult" hidden></div>
+
+      <button type="button" class="secondary" id="backBtn">Back to Dashboard</button>
+    </main>
+
+    <script type="module" src="/src/pages/exam.js"></script>
+  </body>
+</html>

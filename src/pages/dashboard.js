@@ -1,8 +1,9 @@
 import { supabase, DEFAULT_AVATAR, isMissingTable, setupHint } from "../lib/supabase.js";
 import { requireUser, displayName, wireLogout } from "../lib/session.js";
-import { countLabel, el, renderList, setNotice, wireTabs } from "../lib/ui.js";
+import { countLabel, el, renderList, setBusy, setNotice, wireTabs } from "../lib/ui.js";
 import { describeVideo } from "../lib/video.js";
 import { dueStatus } from "../lib/dates.js";
+import { openSebGate } from "../lib/sebGate.js";
 import "../lib/snow.js";
 
 const welcomeText = document.getElementById("welcomeText");
@@ -57,18 +58,41 @@ function videoCard(video) {
 }
 
 function testCard(test) {
+  const info = [el("h4", { text: test.title }), el("p", { text: test.subject })];
+
+  // Tests default to requiring SEB; only an explicit false opens directly.
+  if (test.requires_seb === false) {
+    return el("article", { className: "test-card" }, [
+      el("div", { className: "test-info" }, info),
+      el("a", {
+        className: "start-btn",
+        href: `exam.html?test=${encodeURIComponent(test.id)}`,
+        text: "Start Test",
+      }),
+    ]);
+  }
+
+  info.push(el("small", { className: "seb-note", text: "Requires Safe Exam Browser" }));
+
+  // A button, not a link: the gate must run before the exam URL is opened.
+  const startBtn = el("button", {
+    type: "button",
+    className: "start-btn",
+    text: "Start Test",
+  });
+
+  startBtn.addEventListener("click", async () => {
+    const reset = setBusy(startBtn, "Checking...");
+    try {
+      await openSebGate(test);
+    } finally {
+      reset();
+    }
+  });
+
   return el("article", { className: "test-card" }, [
-    el("div", { className: "test-info" }, [
-      el("h4", { text: test.title }),
-      el("p", { text: test.subject }),
-    ]),
-    el("a", {
-      className: "start-btn",
-      href: test.form_url,
-      target: "_blank",
-      rel: "noreferrer",
-      text: "Start Test",
-    }),
+    el("div", { className: "test-info" }, info),
+    startBtn,
   ]);
 }
 

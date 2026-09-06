@@ -135,3 +135,73 @@ export function wireTabs(tablist) {
   const initial = tabs.find(tab => tab.getAttribute("aria-selected") === "true") ?? tabs[0];
   if (initial) select(initial);
 }
+
+/**
+ * Opens a modal dialog and returns a promise resolving to the value of the
+ * action the user chose (or null if they dismissed it).
+ *
+ * @param {object} options
+ * @param {string} options.title
+ * @param {Node[]} options.body
+ * @param {{label: string, value: any, variant?: string, href?: string, keepOpen?: boolean}[]} options.actions
+ */
+export function openModal({ title, body = [], actions = [] }) {
+  return new Promise(resolve => {
+    let settled = false;
+
+    const close = value => {
+      if (settled) return;
+      settled = true;
+      document.removeEventListener("keydown", onKey);
+      backdrop.remove();
+      previouslyFocused?.focus?.();
+      resolve(value);
+    };
+
+    const previouslyFocused = document.activeElement;
+
+    const buttons = actions.map(action => {
+      // An anchor is used for links so the OS handles custom schemes (seb://)
+      // and so middle-click and "copy link" behave normally.
+      const node = action.href
+        ? el("a", {
+            className: `modal-action ${action.variant ?? ""}`.trim(),
+            href: action.href,
+            target: action.target ?? "_self",
+            rel: "noreferrer",
+            text: action.label,
+          })
+        : el("button", {
+            type: "button",
+            className: `modal-action ${action.variant ?? ""}`.trim(),
+            text: action.label,
+          });
+
+      node.addEventListener("click", () => {
+        if (!action.keepOpen) close(action.value);
+      });
+      return node;
+    });
+
+    const dialog = el("div", { className: "modal", role: "dialog" }, [
+      el("h2", { className: "modal-title", text: title }),
+      el("div", { className: "modal-body" }, body),
+      el("div", { className: "modal-actions" }, buttons),
+    ]);
+    dialog.setAttribute("aria-modal", "true");
+    dialog.setAttribute("aria-label", title);
+
+    const backdrop = el("div", { className: "modal-backdrop" }, [dialog]);
+    backdrop.addEventListener("click", event => {
+      if (event.target === backdrop) close(null);
+    });
+
+    function onKey(event) {
+      if (event.key === "Escape") close(null);
+    }
+
+    document.addEventListener("keydown", onKey);
+    document.body.append(backdrop);
+    buttons[0]?.focus();
+  });
+}

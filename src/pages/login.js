@@ -13,6 +13,17 @@ const forgotBtn = document.getElementById("forgotBtn");
 
 let inFlight = false;
 
+/**
+ * Where to go after signing in, when the user was sent here from a guarded
+ * page. Only same-directory page names are accepted — an open redirect would
+ * let someone mail out a portal link that lands on their own site.
+ */
+function safeNext() {
+  const next = new URLSearchParams(location.search).get("next");
+  if (!next) return null;
+  return /^[\w.-]+\.html(\?[\w=%&.-]*)?$/.test(next) ? next : null;
+}
+
 function showError(message) {
   errorEl.textContent = message;
   errorEl.hidden = !message;
@@ -40,7 +51,7 @@ async function login() {
     const role = await getRole(email);
 
     loader?.classList.remove("hidden");
-    location.replace(role === "admin" ? "admin.html" : "dashboard.html");
+    location.replace(safeNext() ?? (role === "admin" ? "admin.html" : "dashboard.html"));
   } catch (err) {
     console.error("Login failed:", err);
     showError(errorMessage(err, "Could not sign you in. Check your details and try again."));

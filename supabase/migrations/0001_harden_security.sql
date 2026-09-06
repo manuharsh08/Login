@@ -134,11 +134,10 @@ create policy "results: read own or admin"
   on public.results for select to authenticated
   using (email = auth.jwt() ->> 'email' or public.is_admin());
 
--- A student may record an attempt only under their own email.
+-- Deliberately NO student insert policy. Scores are written by submit_exam()
+-- (migration 0007), which grades on the server. A policy allowing students to
+-- insert their own rows would let anyone POST themselves 100%.
 drop policy if exists "results: insert own" on public.results;
-create policy "results: insert own"
-  on public.results for insert to authenticated
-  with check (email = auth.jwt() ->> 'email');
 
 drop policy if exists "results: admins manage" on public.results;
 create policy "results: admins manage"

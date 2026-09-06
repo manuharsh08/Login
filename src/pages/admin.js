@@ -2,6 +2,8 @@ import { supabase, isMissingTable, setupHint } from "../lib/supabase.js";
 import { requireAdmin, wireLogout } from "../lib/session.js";
 import { describeVideo } from "../lib/video.js";
 import { dueStatus } from "../lib/dates.js";
+import { isMissingSebBucket, publishSebConfig, removeSebConfig } from "../lib/seb.js";
+import { openQuestionEditor } from "../lib/questionEditor.js";
 import { changePasswordSection } from "../lib/password.js";
 import {
   countLabel,
@@ -18,8 +20,9 @@ import "../lib/snow.js";
 const addTestBtn = document.getElementById("addTestBtn");
 const testTitle = document.getElementById("testTitle");
 const testSubject = document.getElementById("testSubject");
-const testLink = document.getElementById("testLink");
+const testRequiresSeb = document.getElementById("testRequiresSeb");
 const adminTestsList = document.getElementById("adminTestsList");
+const questionEditor = document.getElementById("questionEditor");
 const adminResultsList = document.getElementById("adminResultsList");
 const adminTestsCount = document.getElementById("adminTestsCount");
 const adminResultsCount = document.getElementById("adminResultsCount");
@@ -66,17 +69,12 @@ function isValidUrl(value) {
 function readTestForm() {
   const title = testTitle.value.trim();
   const subject = testSubject.value.trim();
-  const formUrl = testLink.value.trim();
 
-  if (!title || !subject || !formUrl) {
-    toast("Please fill in every field.", "error");
+  if (!title || !subject) {
+    toast("A test needs a title and a subject.", "error");
     return null;
   }
-  if (!isValidUrl(formUrl)) {
-    toast("Enter a valid http(s) test link.", "error");
-    return null;
-  }
-  return { title, subject, form_url: formUrl };
+  return { title, subject, requires_seb: testRequiresSeb.checked };
 }
 
 addTestBtn.addEventListener("click", async () => {
@@ -85,19 +83,43 @@ addTestBtn.addEventListener("click", async () => {
 
   const reset = setBusy(addTestBtn, "Adding...");
 
-  const { error } = await supabase.from("tests").insert([payload]);
-  reset();
+  const { data: created, error } = await supabase.from("tests").insert([payload]).select();
 
   if (error) {
+    reset();
     console.error("Create test failed:", error.message);
     toast(errorMessage(error, "Could not create the test."), "error");
     return;
   }
 
+  reset();
+
   testTitle.value = "";
   testSubject.value = "";
-  testLink.value = "";
-  toast("Test added.", "success");
+  testRequiresSeb.checked = true;
+  toast("Test added. Add questions to it below.", "success");
+
+  // The lockdown config is generated and hosted here so a teacher never has to
+  // produce or host a .seb file themselves.
+  if (payload.requires_seb && created?.[0]) {
+    try {
+      const configUrl = await publishSebConfig(supabase, created[0]);
+      const { error: linkError } = await supabase
+        .from("tests")
+        .update({ seb_config_url: configUrl })
+        .eq("id", created[0].id);
+      if (linkError) throw linkError;
+    } catch (uploadError) {
+      console.error("Could not publish .seb config:", uploadError);
+      // The test exists; only its lockdown config is missing. Say exactly that.
+      toast(
+        isMissingSebBucket(uploadError)
+          ? "Test added, but lockdown setup needs migration 0006_seb_config_storage.sql."
+          : errorMessage(uploadError, "Test added, but its lockdown config could not be saved."),
+        "error"
+      );
+    }
+  }
 
   await Promise.all([loadTests(), loadStats()]);
 });
@@ -106,7 +128,6 @@ addTestBtn.addEventListener("click", async () => {
 function editForm(test, onDone) {
   const titleInput = el("input", { value: test.title, placeholder: "Title" });
   const subjectInput = el("input", { value: test.subject, placeholder: "Subject" });
-  const urlInput = el("input", { type: "url", value: test.form_url, placeholder: "Form link" });
 
   const saveBtn = el("button", { type: "button", className: "edit-btn", text: "Save" });
   const cancelBtn = el("button", { type: "button", className: "secondary", text: "Cancel" });
@@ -114,29 +135,23 @@ function editForm(test, onDone) {
   saveBtn.addEventListener("click", async () => {
     const title = titleInput.value.trim();
     const subject = subjectInput.value.trim();
-    const formUrl = urlInput.value.trim();
 
-    if (!title || !subject || !formUrl) {
-      toast("Please fill in every field.", "error");
-      return;
-    }
-    if (!isValidUrl(formUrl)) {
-      toast("Enter a valid http(s) test link.", "error");
+    if (!title || !subject) {
+      toast("A test needs a title and a subject.", "error");
       return;
     }
 
     const reset = setBusy(saveBtn, "Saving...");
-    const { error } = await supabase
-      .from("tests")
-      .update({ title, subject, form_url: formUrl })
-      .eq("id", test.id);
-    reset();
+    const { error } = await supabase.from("tests").update({ title, subject }).eq("id", test.id);
 
     if (error) {
+      reset();
       console.error("Update test failed:", error.message);
       toast(errorMessage(error, "Could not update the test."), "error");
       return;
     }
+
+    reset();
 
     toast("Test updated.", "success");
     await onDone();
@@ -145,21 +160,73 @@ function editForm(test, onDone) {
   cancelBtn.addEventListener("click", onDone);
 
   return el("article", { className: "test-card test-card-editing" }, [
-    el("div", { className: "form-stack" }, [titleInput, subjectInput, urlInput]),
+    el("div", { className: "form-stack" }, [titleInput, subjectInput]),
     el("div", { className: "admin-actions" }, [saveBtn, cancelBtn]),
   ]);
 }
 
 function testCard(test) {
-  const editBtn = el("button", { type: "button", className: "edit-btn", text: "Edit" });
+  const questionsBtn = el("button", { type: "button", className: "edit-btn", text: "Questions" });
+  const editBtn = el("button", { type: "button", className: "edit-btn", text: "Rename" });
+  const refreshBtn = el("button", {
+    type: "button",
+    className: "edit-btn",
+    text: "Refresh lockdown",
+  });
+
+  // Regenerates the .seb file. Needed after any change to what the config
+  // must allow — an out-of-date config silently breaks the exam inside SEB.
+  refreshBtn.addEventListener("click", async () => {
+    const reset = setBusy(refreshBtn, "Refreshing...");
+    try {
+      const configUrl = await publishSebConfig(supabase, test);
+      const { error } = await supabase
+        .from("tests")
+        .update({ seb_config_url: configUrl })
+        .eq("id", test.id);
+      if (error) throw error;
+      toast("Lockdown config refreshed.", "success");
+      await loadTests();
+    } catch (err) {
+      console.error("Refresh config failed:", err);
+      toast(
+        isMissingSebBucket(err)
+          ? "Run supabase/migrations/0006_seb_config_storage.sql first."
+          : errorMessage(err, "Could not refresh the lockdown config."),
+        "error"
+      );
+    } finally {
+      reset();
+    }
+  });
   const deleteBtn = el("button", { type: "button", className: "delete-btn", text: "Delete" });
+
+  // The editor takes over the panel so it gets the full width.
+  questionsBtn.addEventListener("click", () => {
+    adminTestsList.hidden = true;
+    questionEditor.hidden = false;
+    openQuestionEditor(questionEditor, test, () => {
+      questionEditor.hidden = true;
+      questionEditor.replaceChildren();
+      adminTestsList.hidden = false;
+      loadTests();
+    });
+  });
+
+  const sebState =
+    test.requires_seb === false
+      ? "Opens in any browser"
+      : test.seb_config_url
+        ? "Protected by Safe Exam Browser"
+        : "Protected — lockdown setup incomplete";
 
   const card = el("article", { className: "test-card" }, [
     el("div", { className: "test-info" }, [
       el("h4", { text: test.title }),
       el("p", { text: test.subject }),
+      el("small", { className: "seb-note", text: sebState }),
     ]),
-    el("div", { className: "admin-actions" }, [editBtn, deleteBtn]),
+    el("div", { className: "admin-actions" }, [questionsBtn, editBtn, refreshBtn, deleteBtn]),
   ]);
 
   editBtn.addEventListener("click", () => {
@@ -171,13 +238,17 @@ function testCard(test) {
 
     const reset = setBusy(deleteBtn, "Deleting...");
     const { error } = await supabase.from("tests").delete().eq("id", test.id);
-    reset();
 
     if (error) {
+      reset();
       console.error("Delete test failed:", error.message);
       toast(errorMessage(error, "Could not delete the test."), "error");
       return;
     }
+
+    // Leaves no orphaned config behind in storage.
+    await removeSebConfig(supabase, test.id);
+    reset();
 
     toast("Test deleted.", "success");
     await Promise.all([loadTests(), loadStats()]);

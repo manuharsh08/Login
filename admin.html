@@ -196,10 +196,14 @@
               <label for="testSubject">Subject</label>
               <input id="testSubject" type="text" placeholder="Mathematics" required />
             </div>
-            <div class="field">
-              <label for="testLink">Google Form Link</label>
-              <input id="testLink" type="url" placeholder="https://forms.gle/..." required />
-            </div>
+            <label class="checkbox-field" for="testRequiresSeb">
+              <input id="testRequiresSeb" type="checkbox" checked />
+              <span>Protect this test with Safe Exam Browser</span>
+            </label>
+            <small class="hint">
+              Leave this on and the portal does the rest: it builds the lockdown configuration,
+              hosts it, and gives students a Launch button.
+            </small>
           </form>
 
           <button id="addTestBtn" type="button">Add Test</button>
@@ -210,6 +214,7 @@
           <span id="adminTestsCount">0 tests</span>
         </div>
         <div id="adminTestsList"></div>
+        <div id="questionEditor" hidden></div>
       </section>
 
       <!-- Results -->
