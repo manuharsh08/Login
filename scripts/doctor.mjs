@@ -112,6 +112,14 @@ if (usersError) {
 
   const pending = listed.filter(email => !admins.some(a => a.toLowerCase() === email));
   if (pending.length) warn(`in ADMIN_EMAILS but not admin yet: ${pending.join(", ")}`);
+
+  // An admin the list no longer names still has full access until the sync
+  // runs. That is the failure that actually matters, so report it loudly.
+  const stale = admins.filter(email => !listed.includes(email.toLowerCase()));
+  if (stale.length) {
+    bad(`still admin but NOT in ADMIN_EMAILS: ${stale.join(", ")}`);
+    hint("these accounts keep admin access until you run: npm run admin:promote");
+  }
 }
 
 const { data: accounts, error: authError } = await db.auth.admin.listUsers({ perPage: 1000 });

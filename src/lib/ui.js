@@ -99,3 +99,109 @@ export function onSubmit(inputs, handler) {
     });
   });
 }
+
+/**
+ * Wires a [role="tablist"] of [data-tab] buttons to #panel-<name> sections.
+ * Keeps one panel visible at a time and supports arrow-key navigation.
+ */
+export function wireTabs(tablist) {
+  if (!tablist) return;
+
+  const tabs = [...tablist.querySelectorAll("[data-tab]")];
+  const panelFor = tab => document.getElementById(`panel-${tab.dataset.tab}`);
+
+  function select(tab) {
+    tabs.forEach(other => {
+      const active = other === tab;
+      other.setAttribute("aria-selected", String(active));
+      other.classList.toggle("tab-active", active);
+
+      const panel = panelFor(other);
+      if (panel) panel.hidden = !active;
+    });
+    tab.focus();
+  }
+
+  tabs.forEach((tab, index) => {
+    tab.addEventListener("click", () => select(tab));
+    tab.addEventListener("keydown", event => {
+      const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+      if (!step) return;
+      event.preventDefault();
+      select(tabs[(index + step + tabs.length) % tabs.length]);
+    });
+  });
+
+  const initial = tabs.find(tab => tab.getAttribute("aria-selected") === "true") ?? tabs[0];
+  if (initial) select(initial);
+}
+
+/**
+ * Opens a modal dialog and returns a promise resolving to the value of the
+ * action the user chose (or null if they dismissed it).
+ *
+ * @param {object} options
+ * @param {string} options.title
+ * @param {Node[]} options.body
+ * @param {{label: string, value: any, variant?: string, href?: string, keepOpen?: boolean}[]} options.actions
+ */
+export function openModal({ title, body = [], actions = [] }) {
+  return new Promise(resolve => {
+    let settled = false;
+
+    const close = value => {
+      if (settled) return;
+      settled = true;
+      document.removeEventListener("keydown", onKey);
+      backdrop.remove();
+      previouslyFocused?.focus?.();
+      resolve(value);
+    };
+
+    const previouslyFocused = document.activeElement;
+
+    const buttons = actions.map(action => {
+      // An anchor is used for links so the OS handles custom schemes (seb://)
+      // and so middle-click and "copy link" behave normally.
+      const node = action.href
+        ? el("a", {
+            className: `modal-action ${action.variant ?? ""}`.trim(),
+            href: action.href,
+            target: action.target ?? "_self",
+            rel: "noreferrer",
+            text: action.label,
+          })
+        : el("button", {
+            type: "button",
+            className: `modal-action ${action.variant ?? ""}`.trim(),
+            text: action.label,
+          });
+
+      node.addEventListener("click", () => {
+        if (!action.keepOpen) close(action.value);
+      });
+      return node;
+    });
+
+    const dialog = el("div", { className: "modal", role: "dialog" }, [
+      el("h2", { className: "modal-title", text: title }),
+      el("div", { className: "modal-body" }, body),
+      el("div", { className: "modal-actions" }, buttons),
+    ]);
+    dialog.setAttribute("aria-modal", "true");
+    dialog.setAttribute("aria-label", title);
+
+    const backdrop = el("div", { className: "modal-backdrop" }, [dialog]);
+    backdrop.addEventListener("click", event => {
+      if (event.target === backdrop) close(null);
+    });
+
+    function onKey(event) {
+      if (event.key === "Escape") close(null);
+    }
+
+    document.addEventListener("keydown", onKey);
+    document.body.append(backdrop);
+    buttons[0]?.focus();
+  });
+}

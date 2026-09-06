@@ -24,7 +24,53 @@
         </div>
       </header>
 
-      <section>
+      <nav class="tabs" role="tablist" aria-label="Dashboard sections">
+        <button type="button" class="tab" role="tab" data-tab="notices" aria-selected="true">
+          Notice Board
+        </button>
+        <button type="button" class="tab" role="tab" data-tab="videos" aria-selected="false">
+          Video Lessons
+        </button>
+        <button type="button" class="tab" role="tab" data-tab="assignments" aria-selected="false">
+          Assignments
+        </button>
+        <button type="button" class="tab" role="tab" data-tab="tests" aria-selected="false">
+          Tests
+        </button>
+        <button type="button" class="tab" role="tab" data-tab="results" aria-selected="false">
+          My Results
+        </button>
+      </nav>
+
+      <section id="panel-notices" role="tabpanel">
+        <div class="section-title">
+          <h2>Notice Board</h2>
+          <span id="noticesCount">0 notices</span>
+        </div>
+        <div id="noticesList"></div>
+      </section>
+
+      <section id="panel-videos" role="tabpanel" hidden>
+        <div class="section-title">
+          <h2>Video Lessons</h2>
+          <span id="videosCount">0 videos</span>
+        </div>
+        <div class="field filter-field">
+          <label for="videoSearch">Search lessons</label>
+          <input id="videoSearch" type="search" placeholder="Filter by title or subject" />
+        </div>
+        <div id="videosList"></div>
+      </section>
+
+      <section id="panel-assignments" role="tabpanel" hidden>
+        <div class="section-title">
+          <h2>Assignments</h2>
+          <span id="assignmentsCount">0 assignments</span>
+        </div>
+        <div id="assignmentsList"></div>
+      </section>
+
+      <section id="panel-tests" role="tabpanel" hidden>
         <div class="section-title">
           <h2>Available Tests</h2>
           <span id="testsCount">0 pending</span>
@@ -32,7 +78,7 @@
         <div id="testsList"></div>
       </section>
 
-      <section class="section">
+      <section id="panel-results" role="tabpanel" hidden>
         <div class="section-title">
           <h2>Previous Results</h2>
           <span id="resultsCount">0 attempts</span>

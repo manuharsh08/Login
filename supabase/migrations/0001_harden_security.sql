@@ -113,10 +113,27 @@ $$;
 
 alter table public.tests enable row level security;
 
+-- Students may read released tests only. Migration 0008 adds tests.status;
+-- until it has run there is nothing to filter on, so this policy adapts rather
+-- than either failing on a fresh database or, when re-run later, quietly
+-- re-exposing every draft to students.
 drop policy if exists "tests: read for signed-in users" on public.tests;
-create policy "tests: read for signed-in users"
-  on public.tests for select to authenticated
-  using (true);
+drop policy if exists "tests: read published" on public.tests;
+
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'tests' and column_name = 'status'
+  ) then
+    execute 'create policy "tests: read published" on public.tests '
+         || 'for select to authenticated '
+         || 'using (status = ''published'' or public.is_admin())';
+  else
+    execute 'create policy "tests: read published" on public.tests '
+         || 'for select to authenticated using (true)';
+  end if;
+end $$;
 
 drop policy if exists "tests: admins manage" on public.tests;
 create policy "tests: admins manage"
@@ -134,11 +151,10 @@ create policy "results: read own or admin"
   on public.results for select to authenticated
   using (email = auth.jwt() ->> 'email' or public.is_admin());
 
--- A student may record an attempt only under their own email.
+-- Deliberately NO student insert policy. Scores are written by submit_exam()
+-- (migration 0007), which grades on the server. A policy allowing students to
+-- insert their own rows would let anyone POST themselves 100%.
 drop policy if exists "results: insert own" on public.results;
-create policy "results: insert own"
-  on public.results for insert to authenticated
-  with check (email = auth.jwt() ->> 'email');
 
 drop policy if exists "results: admins manage" on public.results;
 create policy "results: admins manage"

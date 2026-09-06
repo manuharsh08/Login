@@ -16,7 +16,11 @@ export async function requireUser() {
   const { data, error } = await supabase.auth.getUser();
 
   if (error || !data?.user) {
-    return haltForRedirect("index.html");
+    // Carry the destination through the login page. Inside Safe Exam Browser
+    // the session always starts empty, so a student opening an exam link would
+    // otherwise sign in and land on the dashboard instead of their exam.
+    const next = `${location.pathname.split("/").pop()}${location.search}`;
+    return haltForRedirect(`index.html?next=${encodeURIComponent(next)}`);
   }
   return data.user;
 }

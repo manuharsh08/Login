@@ -1,5 +1,6 @@
 import { supabase, uploadAvatar, DEFAULT_AVATAR } from "../lib/supabase.js";
 import { requireUser } from "../lib/session.js";
+import { changePasswordSection } from "../lib/password.js";
 import { errorMessage, setBusy, toast } from "../lib/ui.js";
 import "../lib/snow.js";
 
@@ -15,6 +16,8 @@ const user = await requireUser();
 
 avatarPreview.src = user.user_metadata?.photo || DEFAULT_AVATAR;
 nameInput.value = user.user_metadata?.name || "";
+
+document.getElementById("passwordMount")?.append(changePasswordSection());
 
 let previewUrl = null;
 

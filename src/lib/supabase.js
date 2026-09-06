@@ -34,3 +34,17 @@ export async function uploadAvatar(file, userId) {
   const { data } = supabase.storage.from("avatars").getPublicUrl(path);
   return data.publicUrl;
 }
+
+/**
+ * True when a query failed because the table does not exist yet — i.e. a
+ * migration in supabase/migrations/ has not been run. PostgREST reports this
+ * as PGRST205 ("not found in the schema cache") with a 404.
+ */
+export function isMissingTable(error) {
+  return error?.code === "PGRST205";
+}
+
+/** Message pointing at the migration that creates a missing table. */
+export function setupHint(feature, migrationFile) {
+  return `${feature} are not set up yet. Run supabase/migrations/${migrationFile}.`;
+}

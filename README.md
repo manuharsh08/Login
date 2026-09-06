@@ -81,15 +81,66 @@ automatically, and third-party code into `vendor`.
 
 ## Database
 
-Three tables are expected:
+| Table                              | Columns used by the app                                                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `users`                            | `email`, `role` (`student` \| `admin`)                                                                                    |
+| `tests`                            | `id`, `title`, `subject`, `kind`, `status`, `form_url`, `duration_minutes`, `closes_at`, `requires_seb`, `seb_config_url` |
+| `questions`                        | `test_id`, `prompt`, `type`, `options`, `answer_key`, `points`, `position` — **admin-only, never read by a student**      |
+| `results`                          | `test_id` → `tests.id`, `email`, `score`, `total`, `percentage`, `attempted_at`                                           |
+| `exam_attempts`                    | `test_id`, `email`, `started_at`, `submitted_at` — the server-held exam clock                                             |
+| `test_secrets`                     | `test_id`, `quit_password` — admin-only                                                                                   |
+| `videos`, `notices`, `assignments` | content shown on the student dashboard                                                                                    |
 
-| Table     | Columns used by the app                                                         |
-| --------- | ------------------------------------------------------------------------------- |
-| `users`   | `email`, `role` (`student` \| `admin`)                                          |
-| `tests`   | `id`, `title`, `subject`, `form_url`, `created_at`                              |
-| `results` | `test_id` → `tests.id`, `email`, `score`, `total`, `percentage`, `attempted_at` |
+Storage buckets: `avatars` for profile pictures, `seb-configs` for generated
+lockdown files.
 
-A `avatars` storage bucket holds profile pictures.
+Run the migrations in `supabase/migrations/` in numerical order, once each, in
+the Supabase SQL Editor. All are idempotent. `0008_exam_delivery.sql` is the
+one that adds drafts, deadlines and time limits — without it the admin page
+cannot publish a test.
+
+### Running a test
+
+A test is a **draft** until you publish it, so questions are always finished
+before anyone can open the paper. On the admin page's **Tests** tab:
+
+1. **Create Draft.** Choose where the questions live — written here and
+   auto-graded, or an existing Google Form. Set the maximum time and the
+   deadline if you want them.
+2. **Questions.** Build the paper. (Skipped for a Google Form.)
+3. **Publish.** This is the point students first see the test. Publishing also
+   generates the Safe Exam Browser config, hosts it, and mints a quit password,
+   which the card then shows you.
+
+**Maximum time** is minutes from the moment a student opens the test;
+**deadline** is a wall-clock moment after which nobody can start or submit.
+Both are enforced in `get_exam()` and `submit_exam()` against the database
+clock, so reloading the page, editing it, or changing the computer's clock
+buys no extra time. When the countdown reaches zero the page submits what the
+student has answered so far.
+
+Changing a published test's settings rebuilds its lockdown config
+automatically. If you move the portal to a different address, press **Refresh
+lockdown** on each test while viewing it from the new address — a config that
+still points at the old one blocks the exam from inside SEB, which looks to a
+student like a failed login.
+
+### What the lockdown config does
+
+`src/lib/seb.js` generates a standard exam configuration: full-screen kiosk
+window with no address bar, no reload, no back/forward, no new windows or
+downloads, no spell check, dictionary or clipboard, no screen sharing or second
+display, no app switching, virtual machines refused, and the usual escape
+shortcuts (Alt+Tab, Alt+F4, Esc, F1–F12, PrintScreen, right-click) disabled.
+Remote-desktop and screen-recording applications are listed as prohibited
+processes. Only this portal, the Supabase API — and, for a Google Form, the
+Google hosts it needs — are allowed through the URL filter.
+
+Quitting is password-protected, so a student cannot leave mid-exam. The quit
+password is stored in `test_secrets`, readable only by admins; it is on the
+test's card for an invigilator who needs to release a stuck machine. The one
+exception is the config's `quitURL`: the exam page navigates there three
+seconds after a submission, which closes Safe Exam Browser without a prompt.
 
 ### Security setup (required)
 
